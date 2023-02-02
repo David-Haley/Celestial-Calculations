@@ -1,50 +1,54 @@
 -- Type declarations for Celestial
 -- Author    : David Haley
 -- Created   : 26/03/2020
--- Last Edit : 26/03/2020
+-- Last Edit : 28/01/2023
 
 with Ada.Numerics.Generic_Elementary_Functions;
 
 package body Celestial is
 
+   To_Degrees : constant := Degrees (Full_Circle / 2) / Ada.Numerics.Pi;
+   To_Radians : constant := Ada.Numerics.Pi / Radians (Full_Circle / 2);
+
    package Celestial_Elementry is new
      Ada.Numerics.Generic_Elementary_Functions (Celestial_Real);
 
-   function sin (X : in Radians) return Celestial_Real is
+   function Sin (X : in Degrees) return Celestial_Real is
+      (Celestial_Elementry.Sin (Celestial_Real (X * To_Radians)));
 
-   begin -- sin
-      return Celestial_Elementry.sin (Celestial_Real (X));
-   end sin;
+   function Cos (X : in Degrees) return Celestial_Real is
+      (Celestial_Elementry.Cos (Celestial_Real (X * To_Radians)));
 
-   function cos (X : in Radians) return Celestial_Real is
+   function Tan (X : in Degrees) return Celestial_Real is
+      (Celestial_Elementry.Tan (Celestial_Real (X * To_Radians)));
 
-   begin -- cos
-      return Celestial_Elementry.cos (Celestial_Real (X));
-   end cos;
+   function Arcsin (X : in Celestial_Real) return Degrees is
+      (Degrees (Celestial_Elementry.Arcsin (X)) * To_Degrees);
 
-   function tan (X : in Radians) return Celestial_Real is
+   function Arccos (X : in Celestial_Real) return Degrees is
+      (Degrees (Celestial_Elementry.Arccos (X)) * To_Degrees);
 
-   begin -- tan
-      return Celestial_Elementry.tan (Celestial_Real (X));
-   end tan;
+   function Arctan (Y : in Celestial_Real;
+                    X : in Celestial_Real := 1.0) return Degrees is
+      (Degrees (Celestial_Elementry.Arctan (Y, X)) * To_Degrees);
 
-   function arcsin (X : in Celestial_Real) return Radians is
+   function Sin (X : in Radians) return Celestial_Real is
+      (Celestial_Elementry.Sin (Celestial_Real (X)));
 
-   begin -- arcsin
-      return Radians (Celestial_Elementry.arcsin (X));
-   end arcsin;
+   function Cos (X : in Radians) return Celestial_Real is
+      (Celestial_Elementry.Cos (Celestial_Real (X)));
 
-   function arccos (X : in Celestial_Real) return Radians is
+   function Tan (X : in Radians) return Celestial_Real is
+      (Celestial_Elementry.Tan (Celestial_Real (X)));
 
-   begin -- arccos
-      return Radians (Celestial_Elementry.arccos (X));
-   end arccos;
+   function Arcsin (X : in Celestial_Real) return Radians is
+      (Radians (Celestial_Elementry.Arcsin (X)));
 
-   function arctan (Y : in Celestial_Real; X : in Celestial_Real := 1.0)
-                    return Radians is
+   function Arccos (X : in Celestial_Real) return Radians is
+      (Radians (Celestial_Elementry.Arccos (X)));
 
-   begin -- arctan
-      return Radians (Celestial_Elementry.arctan (Y, X));
-   end arctan;
+   function Arctan (Y : in Celestial_Real;
+                    X : in Celestial_Real := 1.0) return Radians is
+      (Radians (Celestial_Elementry.Arctan (Y, X)));
 
 end Celestial;

@@ -1,7 +1,16 @@
 -- Type declarations for Celestial
+-- the use of declarations of the form type x is new y renders x and y as
+-- incompatible types this allows the compiler to detect simple errors such as
+-- using the language Sin (X) which takes an argument in radians with an
+-- argument that is Degrees;
+
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 26/03/2020
+-- Last Edit : 31/01/2023
+
+-- 20230131 : Decimal_Hours, Julian_Days, Radians and Degreed, made types rather
+-- than sub types to render them incompatible, explicit type conversions
+-- required in calculations. Degree trig functions added;
 
 with Ada.Numerics;
 
@@ -12,33 +21,53 @@ package Celestial is
 
    type Radians is new Celestial_Real;
 
-   Two_Pi : Radians := 2.0 * Ada.Numerics.Pi;
-   Half_Pi : Radians := Ada.Numerics.Pi / 2.0;
+   Two_Pi : constant Radians := 2.0 * Ada.Numerics.Pi;
+   Half_Pi : constant Radians := Ada.Numerics.Pi / 2.0;
+
+   Full_Day : constant := 24;
+   Sixty : constant := 60;
 
    -- time related types
-   subtype Decimal_Hours is Celestial_Real range -24.0 .. 24.0;
-   subtype Time_Offsets is Decimal_Hours range -12.0 .. 12.0;
+   type Decimal_Hours is new Celestial_Real range
+     -Celestial_Real (Full_Day) .. Celestial_Real (Full_Day);
+   subtype Time_Offsets is Decimal_Hours range
+     -Decimal_Hours (Full_Day / 2) .. Decimal_Hours (Full_Day / 2);
    -- Not to be confused with Ada.Calendar.Time_Zones.Time_Offset
-   subtype Julian_Days is  Celestial_Real;
+   type Julian_Days is new Celestial_Real range 0.0 .. Celestial_Real'Last;
 
    -- coordinate related types
-   subtype Degrees is Celestial_Real range -360.0 .. 360.0;
-   subtype Degrees_I is Integer range -360 .. 360;
-   subtype Minutes_N is Integer range 0 .. 60;
+   Full_Circle : constant := 360;
+   type Degrees is new Celestial_Real range
+     - Celestial_Real (Full_Circle) .. Celestial_Real (Full_Circle);
+   subtype Degrees_I is Integer range -Full_Circle .. Full_Circle;
+   subtype Minutes_N is Natural range 0 .. Sixty;
    subtype Seconds_N is Minutes_N;
-   subtype Semis is Degrees range 0.0 .. 180.0;
-   subtype Quadrents is Degrees range 0.0 .. 90.0;
+   subtype Semis is Degrees range 0.0 .. Degrees (Full_Circle / 2);
+   subtype Quadrents is Degrees range 0.0 .. Degrees (Full_Circle / 4);
    type Directions is (North, South, East, West);
    subtype Longitude_Directions is Directions range East .. West;
    subtype Latitude_Directions is Directions range North .. South;
 
-   function sin (X : in Radians) return Celestial_Real;
-   function cos (X : in Radians) return Celestial_Real;
-   function tan (X : in Radians) return Celestial_Real;
+   -- Trig Functions overloaded for Degrees not Radians
 
-   function arcsin (X : in Celestial_Real) return Radians;
-   function arccos (X : in Celestial_Real) return Radians;
-   function arctan (Y : in Celestial_Real; X : in Celestial_Real := 1.0)
-                    return Radians;
+   function Sin (X : in Degrees) return Celestial_Real;
+   function Cos (X : in Degrees) return Celestial_Real;
+   function Tan (X : in Degrees) return Celestial_Real;
+
+   function Arcsin (X : in Celestial_Real) return Degrees;
+   function Arccos (X : in Celestial_Real) return Degrees;
+   function Arctan (Y : in Celestial_Real;
+                    X : in Celestial_Real := 1.0) return Degrees;
+
+   -- Trig Functions overloaded for Radians not Degrees
+
+   function Sin (X : in Radians) return Celestial_Real;
+   function Cos (X : in Radians) return Celestial_Real;
+   function Tan (X : in Radians) return Celestial_Real;
+
+   function Arcsin (X : in Celestial_Real) return Radians;
+   function Arccos (X : in Celestial_Real) return Radians;
+   function Arctan (Y : in Celestial_Real;
+                    X : in Celestial_Real := 1.0) return Radians;
 
 end Celestial;

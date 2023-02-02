@@ -5,23 +5,33 @@ with Ada.Calendar.Time_Zones;
 -- All date calculations assumes Gregorian dates which will yeild a result in
 -- the range of Ada Year_Number type. In general an exception will be raised if
 -- a year outside this renge is used.
+
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 27/11/2019
+-- Last Edit : 02/02/2023
 
--- with Ada.Text_IO; use Ada.Text_IO;
+-- 20230102 : Ada.Calendar.Time_Zones.Time_Offset versions of To_Greenwich and
+-- TO_Local added.
+-- 20230130 : Consolidation of constants some functions converted to function
+-- statements.
+
+with Ada.Calendar.Arithmetic; use Ada.Calendar.Arithmetic;
 
 package body Celestial.Time is
+   subtype C_R is Celestial_Real;
+   subtype D_H is Decimal_Hours;
+   subtype J_D is Julian_Days;
+
+   Hour_Seconds_N : constant := Sixty * Sixty;
+   Hour_Seconds : constant C_R := C_R (Hour_Seconds_N);
+   Day_Seconds_N : constant := Full_Day * Hour_Seconds_N;
+   Day_Seconds : constant C_R := C_R (Day_Seconds_N);
 
    Function To_Hours (Hour : in Hour_Number;
                       Minute : in Minute_Number;
                       Second : in Second_Number) return Decimal_Hours is
-   begin -- To_Hours
-      return Decimal_Hours (Hour) +
-        (Celestial_Real (Minute) +
-             Celestial_Real (Second) / Celestial_Real (Second_Number'Last + 1))
-          / Celestial_Real (Minute_Number'Last + 1);
-   end To_Hours;
+      (D_H (C_R (Hour) + (C_R (Minute) + C_R (Second) / C_R (Sixty))
+          / C_R (Sixty)));
 
    function To_Hours return Decimal_Hours is
       -- Returns uniform Time as a decimal.
@@ -42,18 +52,17 @@ package body Celestial.Time is
       -- conversion is the based on abs (Decimal_Hours)
 
       This_Hour : Natural :=
-        Natural (Celestial_Real'Rounding (abs (Decimal_Hour) * 3600.0));
-      Day : constant Natural := 24 * 3600;
+        Natural (C_R'Rounding (C_R (abs (Decimal_Hour)) * Hour_Seconds));
 
    begin -- To_HHMMSS
       -- Rounding could result in This_Time equal to 24:00:00
-      if This_Hour >= Day then
-         This_Hour := Day - 1;
-      end if; --
-      Second := Second_Number (This_Hour mod 60);
-      This_Hour := This_Hour / 60;
-      Minute := Minute_Number (This_Hour mod 60);
-      This_Hour := This_Hour / 60;
+      if This_Hour >= Day_Seconds_N then
+         This_Hour := Day_Seconds_N - 1;
+      end if; -- This_Hour >= Day_Seconds_N
+      Second := Second_Number (This_Hour mod Sixty);
+      This_Hour := This_Hour / Sixty;
+      Minute := Minute_Number (This_Hour mod Sixty);
+      This_Hour := This_Hour / Sixty;
       Hour := Hour_Number (This_Hour);
    end To_HHMMSS;
 
@@ -67,23 +76,22 @@ package body Celestial.Time is
       Valid_Time : Ada.Calendar.Time
         := Time_Of (Year, Month, Day, Hour, Minute, Second);
       -- will raise exception if not valid Gregorian date
-      This_Year : Julian_Days := Julian_Days (Year);
-      This_Month : Julian_Days := Julian_Days (Month);
-      This_Day : Julian_Days;
+      This_Year : C_R := C_R (Year);
+      This_Month : C_R := C_R (Month);
+      This_Day : C_R;
       A, B : Integer;
 
    begin -- Julian_Day
-      This_Day := Julian_Days (Day) +
-        To_Hours (Hour, Minute, Second) / Julian_Days (Hour_Number'Last + 1);
+      This_Day := C_R (Day) +
+        C_R (To_Hours (Hour, Minute, Second)) / C_R (Full_Day);
       if Month <= 2 then
          This_Month := This_Month + 12.0;
          This_Year := This_Year - 1.0;
       end if; -- Month <= 2
-      A := Integer (Julian_Days'Truncation (This_Year / 100.0));
+      A := Integer (C_R'Truncation (This_Year / 100.0));
       B := 2 - A + A / 4;
-      return Julian_Days (B) + Julian_Days'Truncation (This_Year * 365.25) +
-        Julian_Days'Truncation ((This_Month + 1.0) * 30.6001) +
-        This_Day + 1720994.5;
+      return J_D (C_R (B) + C_R'Truncation (This_Year * 365.25) +
+        C_R'Truncation ((This_Month + 1.0) * 30.6001) + This_Day + 1720994.5);
    end Julian_Day;
 
    function Julian_Day return Julian_Days is
@@ -153,6 +161,13 @@ package body Celestial.Time is
       return Time_Of (Year, Month, Day, Hour, Minute, Second);
    end From_Julian_Day;
 
+   function Day_of_Year (Year : in Year_Number;
+                         Month : in Month_Number;
+                         Day : in Day_Number) return Year_Days is
+     (Year_Days (J_D'Rounding (Julian_Day (Year, Month, Day, 0, 0, 0)
+      - Julian_Day (Year, 1, 1, 0, 0, 0))) + 1);
+   -- Days counting 1 January of year as 1
+
    function UTC_To_GST (Year : in Year_Number;
                         Month : in Month_Number;
                         Day : in Day_Number;
@@ -160,23 +175,19 @@ package body Celestial.Time is
                         Minute : in Minute_Number;
                         Second : in Second_Number) return Decimal_Hours is
 
-      Day_of_Year, T, R, B : Julian_Days;
-      T0, Result : Decimal_Hours;
+      T, R, B, T0, Result : C_R;
 
    begin -- UTC_To_GST
-      Day_of_Year :=
-        Julian_Days'Rounding (Julian_Day (Year, Month, Day, 0, 0, 0)
-                              - Julian_Day (Year, 1, 1, 0, 0, 0));
       -- Days since 1 January of year, as an integer
-      T := (Julian_Day (Year, 1, 1, 0, 0, 0) - 2415020.0) / 36525.0;
+      T := (C_R (Julian_Day (Year, 1, 1, 0, 0, 0)) - 2415020.0) / 36525.0;
       R := 6.6460656 + 2400.051262 * T + 0.00002581 * T ** 2;
-      B := 24.0 - R + 24.0 * Julian_Days (Year - 1900);
-      T0 := Decimal_Hours (0.0657098 * Day_of_Year - B);
-      Result := T0 + 1.002738 * To_Hours (Hour, Minute, Second);
+      B := C_R (Full_Day) - R + C_R (Full_Day) * C_R (Year - 1900);
+      T0 := C_R (0.0657098 * C_R (Day_of_Year (Year, Month, Day) - 1) - B);
+      Result :=  T0 + 1.002738 * C_R (To_Hours (Hour, Minute, Second));
       if Result < 0.0 then
-         return Result + 24.0;
+         return D_H (Result + 24.0);
       else
-         return Result;
+         return D_H (Result);
       end if; -- Result < 0.0
    end UTC_To_GST;
 
@@ -200,25 +211,21 @@ package body Celestial.Time is
                         Minute : in Minute_Number;
                         Second : in Second_Number) return Decimal_Hours is
 
-      Day_of_Year, T, R, B, T0, A : Julian_Days;
+      T, R, B, T0, A : C_R;
 
    begin -- GST_To_UTC
-      Day_of_Year :=
-        Julian_Days'Rounding (Julian_Day (Year, Month, Day, 0, 0, 0)
-                              - Julian_Day (Year, 1, 1, 0, 0, 0));
-      -- Days since 1 January of year, as an integer
-      T := (Julian_Day (Year, 1, 1, 0, 0, 0) - 2415020.0) / 36525.0;
+      T := C_R (Julian_Day (Year, 1, 1, 0, 0, 0) - 2415020.0) / 36525.0;
       R := 6.6460656 + 2400.051262 * T + 0.00002581 * T ** 2;
-      B := 24.0 - R + 24.0 * Julian_Days (Year - 1900);
-      T0 := Julian_Days (0.0657098 * Day_of_Year - B);
-      if T0 > 24.0 then
-         T0 := T0 - 24.0;
+      B := C_R (Full_Day) - R + C_R (Full_Day) * C_R (Year - 1900);
+      T0 := 0.0657098 * C_R (Day_of_Year (Year, Month, Day) - 1) - B;
+      if T0 > C_R (Full_Day) then
+         T0 := T0 - C_R (Full_Day);
       elsif T0 < 0.0 then
-         T0 := T0 + 24.0;
-      end if; -- T0 > 24.0
-      A := To_Hours (Hour, Minute, Second) - T0;
+         T0 := T0 + C_R (Full_Day);
+      end if; -- T0 > C_R (Full_Day)
+      A := C_R (To_Hours (Hour, Minute, Second)) - T0;
       if A < 0.0 then
-         A := A + 24.0;
+         A := A + C_R (Full_Day);
       end if; -- A < 0.0
       return Decimal_Hours (0.997270 * A);
    end GST_To_UTC;
@@ -227,7 +234,9 @@ package body Celestial.Time is
                             Direction : in Longitude_Directions)
                             return Time_Offsets is
 
-      Per_Degree : constant Time_Offsets := 24.0 / 360.0;
+      -- Note returns Celestial.Time_Offsets
+
+      Per_Degree : constant Degrees := 24.0 / 360.0;
 
    begin
       if Direction = East then
@@ -241,38 +250,107 @@ package body Celestial.Time is
                             Direction : in Longitude_Directions)
                             return Ada.Calendar.Time_Zones.Time_Offset is
 
+      -- Note returns Ada.Calendar.Time_Zones.Time_Offset
+
       Hour_Offset : Time_Offsets := To_Time_Offset (Longitude, Direction);
 
    begin -- To_Time_Offset
-      return Time_Offset (Celestial_Real'Rounding (Hour_Offset * 60.0));
+      return Time_Offset (C_R'Rounding (C_R (Hour_Offset) * C_R (Sixty)));
    end To_Time_Offset;
 
-   function To_Greenwich (Decimal_Hour : in Decimal_Hours;
-                          Offset : in Time_Offsets) return Decimal_Hours is
+   procedure To_Greenwich (Offset : in Time_Offset;
+                           Year : in out Year_Number;
+                           Month : in out Month_Number;
+                           Day : in out Day_Number;
+                           Hour : in out Hour_Number;
+                           Minute : in out Minute_Number;
+                           Second : in out Second_Number) is
 
-      Result : Celestial_Real := Decimal_Hour - Offset;
+      -- Uses Ada.Calendar.Formatting
+
+      Ada_Time : Ada.Calendar.Time;
+      Sub_Second : Second_Duration := 0.0;
 
    begin -- To_Greenwich
-      if Result < 0.0 then
-         Result := Result + 24.0;
-      elsif Result >= 24.0 then
-         Result := Result - 24.0;
-      end if; -- Result < 0.0
-      return Result;
+      Ada_Time := Time_Of (Year, Month, Day, Hour, Minute, Second, Sub_Second,
+                           Time_Zone => Offset);
+      Split (Ada_Time, Year, Month, Day, Hour, Minute, Second, Sub_Second,
+             Time_Zone => 0);
    end To_Greenwich;
 
-   function To_Local (Decimal_Hour : in Decimal_Hours;
-                      Offset : in Time_Offsets) return Decimal_Hours is
+   procedure To_Greenwich (Offset : in Time_Offsets;
+                           Year : in out Year_Number;
+                           Month : in out Month_Number;
+                           Day : in out Day_Number;
+                           Decimal_Hour : in out Decimal_Hours) is
 
-      Result : Celestial_Real := Decimal_Hour + Offset;
+      -- Uses Celestial.Time_Offsets which provides higher resolution than the
+      -- Ada equivalemt which has one minute resolution or 15' of arc.
+
+      One_Day : constant Day_Count := 1;
+
+      Hour : C_R := C_R (Decimal_Hour - Offset);
+      DMY : Ada.Calendar.Time :=
+        Ada.Calendar.Formatting.Time_Of (Year, Month, Day);
+
+   begin -- To_Greenwich
+      if Hour < 0.0 then
+         Hour := Hour + C_R (Full_Day);
+         DMY := DMY - One_Day;
+      elsif Hour >= C_R (Full_Day) then
+         Hour := Hour - C_R (Full_Day);
+         DMY := DMY + One_Day;
+      end if; -- Hour < 0.0
+      Decimal_Hour := D_H (Hour);
+      Year := Ada.Calendar.Formatting.Year (DMY);
+      Month := Ada.Calendar.Formatting.Month (DMY);
+      Day := Ada.Calendar.Formatting.Day (DMY);
+   end To_Greenwich;
+
+   procedure To_Local (Offset : in Time_Offset;
+                       Year : in out Year_Number;
+                       Month : in out Month_Number;
+                       Day : in out Day_Number;
+                       Hour : in out Hour_Number;
+                       Minute : in out Minute_Number;
+                       Second : in out Second_Number) is
+
+      -- Uses Ada.Calendar.Formatting
+
+      Ada_Time : Ada.Calendar.Time;
+      Sub_Second : Second_Duration := 0.0;
 
    begin -- To_Local
-      if Result < 0.0 then
-         Result := Result + 24.0;
-      elsif Result >= 24.0 then
-         Result := Result - 24.0;
-      end if; -- Result < 0.0
-      return Result;
+      Ada_Time := Time_Of (Year, Month, Day, Hour, Minute, Second, Sub_Second,
+                           Time_Zone => 0);
+      Split (Ada_Time, Year, Month, Day, Hour, Minute, Second, Sub_Second,
+             Time_Zone => Offset);
+   end To_Local;
+
+   procedure To_Local (Offset : in Time_Offsets;
+                       Year : in out Year_Number;
+                       Month : in out Month_Number;
+                       Day : in out Day_Number;
+                       Decimal_Hour : in out Decimal_Hours) is
+
+      One_Day : constant Day_Count := 1;
+
+      Hour : C_R := C_R (Decimal_Hour + Offset);
+      DMY : Ada.Calendar.Time :=
+        Ada.Calendar.Formatting.Time_Of (Year, Month, Day);
+
+   begin -- To_Local
+      if Hour < 0.0 then
+         Hour := Hour + C_R (Full_Day);
+         DMY := DMY - One_Day;
+      elsif Hour >= C_R (Full_Day) then
+         Hour := Hour - C_R (Full_Day);
+         DMY := DMY + One_Day;
+      end if; -- Hour < 0.0
+      Decimal_Hour := D_H (Hour);
+      Year := Ada.Calendar.Formatting.Year (DMY);
+      Month := Ada.Calendar.Formatting.Month (DMY);
+      Day := Ada.Calendar.Formatting.Day (DMY);
    end To_Local;
 
 end Celestial.Time;

@@ -2,21 +2,14 @@
 -- systems. Algorithms are based on Celestial Calculations by J L Lawrence.
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 26/03/2020
+-- Last Edit : 29/01/2023
 
--- with Ada.Calendar; use Ada.Calendar;
---  with Ada.Calendar.Formatting; use Ada.Calendar.Formatting;
---  with Ada.Calendar.Time_Zones; use Ada.Calendar.Time_Zones;
-with Ada.Text_IO; use Ada.Text_IO;
 with Celestial; use Celestial;
 
 package body Celestial.Coordinates is
 
    function To_Radians (Angle : in Degrees) return Radians is
-
-   begin -- To_Radians
-      return Radians (Angle / 360.0) * Two_Pi;
-   end To_Radians;
+      (Radians (Angle / 360.0) * Two_Pi);
 
    function To_Degrees (Angle : in Radians) return Degrees is
 
@@ -77,12 +70,8 @@ package body Celestial.Coordinates is
 
    function To_Longitude (Time_Offset : in Time_Offsets)
                           return Degrees is
-
+      ( Degrees (Time_Offset * 15.0));
       -- Converts from a time offset in decimal hours relative to UTC to
       -- Longitude in degrees.
-
-   begin -- To_Longitude
-      return Time_Offset * 15.0;
-   end To_Longitude;
 
 end Celestial.Coordinates;
