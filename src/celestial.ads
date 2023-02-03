@@ -6,8 +6,9 @@
 
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 31/01/2023
+-- Last Edit : 03/02/2023
 
+-- 20230203 : Pi and Other functions section added.
 -- 20230131 : Decimal_Hours, Julian_Days, Radians and Degreed, made types rather
 -- than sub types to render them incompatible, explicit type conversions
 -- required in calculations. Degree trig functions added;
@@ -21,8 +22,9 @@ package Celestial is
 
    type Radians is new Celestial_Real;
 
-   Two_Pi : constant Radians := 2.0 * Ada.Numerics.Pi;
    Half_Pi : constant Radians := Ada.Numerics.Pi / 2.0;
+   Pi : constant Radians := Ada.Numerics.Pi;
+   Two_Pi : constant Radians := 2.0 * Ada.Numerics.Pi;
 
    Full_Day : constant := 24;
    Sixty : constant := 60;
@@ -69,5 +71,13 @@ package Celestial is
    function Arccos (X : in Celestial_Real) return Radians;
    function Arctan (Y : in Celestial_Real;
                     X : in Celestial_Real := 1.0) return Radians;
+
+   -- Other Functions
+
+   function Sqrt (X : Celestial_Real) return Celestial_Real;
+
+   Function To_Radians (X : in Degrees) return Radians;
+
+   function To_Degrees (X : in Radians) return Degrees;
 
 end Celestial;
