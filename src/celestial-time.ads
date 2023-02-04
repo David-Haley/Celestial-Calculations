@@ -7,8 +7,9 @@
 
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 02/02/2023
+-- Last Edit : 04/02/2023
 
+-- 20230204 : Longitude declaration Changed.
 -- 20230102 : Ada.Calendar.Time_Zones.Time_Offset versions of To_Greenwich and
 -- TO_Local added.
 -- 20230131 : Year_Days and Day_of_Year exported.
@@ -77,15 +78,11 @@ package Celestial.Time is
                         Minute : in Minute_Number;
                         Second : in Second_Number) return Decimal_Hours;
 
-   function To_Time_Offset (Longitude : in Semis;
-                            Direction : in Longitude_Directions)
-                            return Time_Offsets;
+   function To_Time_Offset (Longitude : in Longitudes) return Time_Offsets;
    -- Note returns Celestial.Time_Offsets
 
 
-   function To_Time_Offset (Longitude : in Semis;
-                            Direction : in Longitude_Directions)
-                            return Time_Offset;
+   function To_Time_Offset (Longitude : in Longitudes) return Time_Offset;
    -- Note returns Ada.Calendar.Time_Zones.Time_Offset
 
    procedure To_Greenwich (Offset : in Time_Offset;

@@ -2,8 +2,9 @@
 
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 02/02/2023
+-- Last Edit : 04/02/2023
 
+-- 20230204 : Declaration of Longitude Changed.
 -- 20230202 : Additional tests for Ada.Calendar.Time_Zones.Time_Offset versions
 -- of To_Greenwich and To_Local.
 -- 20230131 : Test for Day_of_Year also test updated for To_Greenwich and
@@ -264,8 +265,7 @@ procedure Test_Time is
       Month : Month_Number;
       Day : Day_Number;
       Decimal_Hour : Decimal_Hours;
-      Longitude : Semis;
-      Direction : Longitude_Directions;
+      Longitude : Longitudes;
       Offset : Time_Offsets;
       Hour : Hour_Number;
       Minute : Minute_Number;
@@ -285,11 +285,11 @@ procedure Test_Time is
       Put ("Second: ");
       Second_IO.Get (Second);
       Decimal_Hour := To_Hours (Hour, Minute, Second);
-      Put ("Longitude: ");
-      Semis_IO.Get (Longitude);
-      Put ("Direction: ");
-      Direction_IO.Get (Direction);
-      Offset := To_Time_Offset (Longitude, Direction);
+      Put ("Longitude.Angle: ");
+      Semis_IO.Get (Longitude.Angle);
+      Put ("Longitude.Hemisphere: ");
+      Direction_IO.Get (Longitude.Hemisphere);
+      Offset := To_Time_Offset (Longitude);
       Put ("Offset:" & Decimal_Hours'Image (Offset) & "  ");
       To_Greenwich (Offset, Year, Month, Day, Decimal_Hour);
       Put ("Greenwich:" & Decimal_Hours'Image (Decimal_Hour) & " or ");
@@ -355,8 +355,7 @@ procedure Test_Time is
       Month : Month_Number;
       Day : Day_Number;
       Decimal_Hour : Decimal_Hours;
-      Longitude : Semis;
-      Direction : Longitude_Directions;
+      Longitude : Longitudes;
       Offset : Time_Offsets;
       Hour : Hour_Number;
       Minute : Minute_Number;
@@ -376,11 +375,11 @@ procedure Test_Time is
       Put ("Second: ");
       Second_IO.Get (Second);
       Decimal_Hour := To_Hours (Hour, Minute, Second);
-      Put ("Longitude: ");
-      Semis_IO.Get (Longitude);
-      Put ("Direction: ");
-      Direction_IO.Get (Direction);
-      Offset := To_Time_Offset (Longitude, Direction);
+      Put ("Longitude.Amgle: ");
+      Semis_IO.Get (Longitude.Angle);
+      Put ("Longitude.Hemishpere: ");
+      Direction_IO.Get (Longitude.Hemisphere);
+      Offset := To_Time_Offset (Longitude);
       Put ("Offset:" & Decimal_Hours'Image (Offset) & "  ");
       To_Local (Offset, Year, Month, Day, Decimal_Hour);
       Put ("Local:" & Decimal_Hours'Image (Decimal_Hour) & " or ");

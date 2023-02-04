@@ -3,7 +3,8 @@
 -- Created   : 26/03/2020
 -- Last Edit : 03/02/2023
 
--- 20230203 : Pi and Other functions section added.
+-- 20230203 : Pi and Other functions section added. To_Degrees correvtedd to
+-- match Degrees range
 -- 20230131 : Decimal_Hours, Julian_Days, Radians and Degreed, made types rather
 -- than sub types to render them incompatible, explicit type conversions
 -- required in calculations. Degree trig functions added;
@@ -60,6 +61,17 @@ package body Celestial is
      (Two_Pi * Radians (X / Degrees (Full_Circle)));
 
    function To_Degrees (X : in Radians) return Degrees is
-   (Degrees (Full_Circle) * Degrees (X / Two_Pi));
+
+      -- Reduces input value to range  - Two_Pi .. Two_Pi before conversion for
+      -- large values there there will be a loss of percision
+
+      Temp : Radians := X;
+
+   begin -- To_Degrees
+      if X < -Two_Pi or Two_Pi < X then
+         Temp := X - (Radians'Truncation (X / Two_Pi) * Two_Pi);
+      end if;
+      return Degrees (Temp / Two_Pi) * Degrees (Full_Circle);
+   end To_Degrees;
 
 end Celestial;

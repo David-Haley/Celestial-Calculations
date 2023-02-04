@@ -8,8 +8,9 @@ with Ada.Calendar.Time_Zones;
 
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 02/02/2023
+-- Last Edit : 04/02/2023
 
+-- 20230204 : Longitude declaration Changed.
 -- 20230102 : Ada.Calendar.Time_Zones.Time_Offset versions of To_Greenwich and
 -- TO_Local added.
 -- 20230130 : Consolidation of constants some functions converted to function
@@ -230,29 +231,26 @@ package body Celestial.Time is
       return Decimal_Hours (0.997270 * A);
    end GST_To_UTC;
 
-   function To_Time_Offset (Longitude : in Semis;
-                            Direction : in Longitude_Directions)
-                            return Time_Offsets is
+   function To_Time_Offset (Longitude : in Longitudes) return Time_Offsets is
 
       -- Note returns Celestial.Time_Offsets
 
       Per_Degree : constant Degrees := 24.0 / 360.0;
 
    begin
-      if Direction = East then
-         return Time_Offsets (Longitude * Per_Degree);
+      if Longitude.Hemisphere = East then
+         return Time_Offsets (Longitude.Angle * Per_Degree);
       else
-         return Time_Offsets (-Longitude * Per_Degree);
+         return Time_Offsets (-Longitude.Angle * Per_Degree);
       end if; -- Direction = West
    end To_Time_Offset;
 
-   function To_Time_Offset (Longitude : in Semis;
-                            Direction : in Longitude_Directions)
+   function To_Time_Offset (Longitude : in Longitudes)
                             return Ada.Calendar.Time_Zones.Time_Offset is
 
       -- Note returns Ada.Calendar.Time_Zones.Time_Offset
 
-      Hour_Offset : Time_Offsets := To_Time_Offset (Longitude, Direction);
+      Hour_Offset : Time_Offsets := To_Time_Offset (Longitude);
 
    begin -- To_Time_Offset
       return Time_Offset (C_R'Rounding (C_R (Hour_Offset) * C_R (Sixty)));

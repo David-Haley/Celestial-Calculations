@@ -2,76 +2,96 @@
 -- systems. Algorithms are based on Celestial Calculations by J L Lawrence.
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 29/01/2023
+-- Last Edit : 04/01/2023
 
 with Celestial; use Celestial;
 
 package body Celestial.Coordinates is
 
-   function To_Radians (Angle : in Degrees) return Radians is
-      (Radians (Angle / 360.0) * Two_Pi);
+   subtype C_R is Celestial_Real;
 
-   function To_Degrees (Angle : in Radians) return Degrees is
+   function To_Latitude (Angle : in Radians) return Latitudes is
 
-      -- May return incorrect results for very large values of Angle.
+      -- Will raise exception if Angle outside of range -Half_Pi .. Half_Pi.
 
-      Temp : Radians := abs (Angle);
-
-   begin -- To_Degrees
-      if Temp > 100.0 * Two_Pi then
-         -- 100 is arbitary number to allow this function to return a result
-         -- even when the subtraction of Two_Pi from Temp would not change the
-         -- value of Temp. Obviously a large number of subtractions would also
-         -- be slow. There is the potential for serious loss of precision if
-         -- Angle is very large. For Angle of the order of 10 ** 13 there
-         -- would only be two significant digits.
-         Temp := Temp - Radians (Radians'Truncation (Temp / Two_Pi)) * Two_Pi;
-      else
-         while Temp > Two_Pi loop
-            Temp := Temp - Two_Pi;
-         end loop; -- Temp > Two_Pi
-      end if; -- Temp > 100.0 * Two_Pi
-      if Angle >= 0.0 then
-         return Degrees (Temp / Two_Pi * 360.0);
-      else
-         return - Degrees (Temp / Two_Pi * 360.0);
-      end if; -- Angle >= 0.0
-   end To_Degrees;
-
-   procedure To_Latitude (Angle : in Radians; Degree : out Semis;
-                          Hemisphere : out Latitude_Directions) is
-
-      -- May return incorrect results for very large values of Angle.
+      Result : Latitudes;
 
    begin -- To_Latitude
-      Degree := abs (To_Degrees (Angle));
+      Result.Angle := abs (To_Degrees (Angle));
       if Angle >= 0.0 then
-         Hemisphere := North;
+         Result.Hemisphere := North;
       else
-         Hemisphere := South;
+         Result.Hemisphere := South;
       end if; -- Angle < 0.0
+      return Result;
    end To_Latitude;
 
-   procedure To_Longitude (Angle : in Radians; Degree : out Semis;
-                           Hemisphere : out Longitude_Directions) is
+   function To_Latitude (Angle : in Degrees) return Latitudes is
 
-      -- May return incorrect results for very large values of Angle.
+      -- Will raise exception if Angle outside of range
+      -- -Full_Circle / 4 .. Full_Circle / 4
 
-      Temp : Radians := abs (Angle);
+      Result : Latitudes;
+
+   begin -- To_Latitude
+      Result.Angle := abs (Angle);
+      if Angle >= 0.0 then
+         Result.Hemisphere := North;
+      else
+         Result.Hemisphere := South;
+      end if; -- Angle < 0.0
+      return Result;
+   end To_Latitude;
+
+   function To_Longitude (Angle : in Radians) return Longitudes is
+
+      -- Will raise exception if angle outside of range -Pi to Pi.
+
+      Result : Longitudes;
 
    begin -- To_Longitude
-      Degree := abs (To_Degrees (Angle));
+      Result.Angle := abs (To_Degrees (Angle));
       if Angle >= 0.0 then
-         Hemisphere := East;
+         Result.Hemisphere := East;
       else
-         Hemisphere := West;
+         Result.Hemisphere := West;
       end if; -- Angle < 0.0
+      return Result;
    end To_Longitude;
 
-   function To_Longitude (Time_Offset : in Time_Offsets)
-                          return Degrees is
-      ( Degrees (Time_Offset * 15.0));
+   function To_Longitude (Angle : in Degrees) return Longitudes is
+
+      -- Will raise exception if angle outside of range
+      -- -Full_Circle / 2 .. Full_Circle / 2.
+
+      Result : Longitudes;
+
+   begin -- To_Longitude
+      Result.Angle := abs (Angle);
+      if Angle >= 0.0 then
+         Result.Hemisphere := East;
+      else
+         Result.Hemisphere := West;
+      end if; -- Angle < 0.0
+      return Result;
+   end To_Longitude;
+
+   function To_Longitude (Time_Offset : in Time_Offsets) return Longitudes is
+
       -- Converts from a time offset in decimal hours relative to UTC to
       -- Longitude in degrees.
+
+      Result : Longitudes;
+
+   begin -- To_Longitude
+      Result.Angle := Degrees (abs (C_R (Time_Offset) / C_R (Full_Day))) *
+        Degrees (Full_Circle);
+      if Time_Offset >= 0.0 then
+         Result.Hemisphere := East;
+      else
+         Result.Hemisphere := West;
+      end if; -- Time_Offset >= 0.0
+      return Result;
+   end To_Longitude;
 
 end Celestial.Coordinates;

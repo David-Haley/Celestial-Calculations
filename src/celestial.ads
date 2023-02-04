@@ -46,9 +46,25 @@ package Celestial is
    subtype Seconds_N is Minutes_N;
    subtype Semis is Degrees range 0.0 .. Degrees (Full_Circle / 2);
    subtype Quadrents is Degrees range 0.0 .. Degrees (Full_Circle / 4);
+
+   -- Terestrial Coordinates
    type Directions is (North, South, East, West);
    subtype Longitude_Directions is Directions range East .. West;
    subtype Latitude_Directions is Directions range North .. South;
+   -- Latitude and Longitude have similar declarations but are not compatible
+   type Latitudes is record
+      Hemisphere : Latitude_Directions;
+      Angle : Quadrents;
+   end record; -- Latidudes
+   type Longitudes is record
+      Hemisphere : Longitude_Directions;
+      Angle : Semis;
+   end record; -- Longitudes
+
+   -- Equatorial Coordinated
+   subtype Declinations is Degrees range
+     -Degrees (Full_Circle / 4) .. Degrees (Full_Circle / 4);
+   subtype Right_Ascensions is Decimal_Hours range 0.0 .. Decimal_Hours'Last;
 
    -- Trig Functions overloaded for Degrees not Radians
 
@@ -79,5 +95,7 @@ package Celestial is
    Function To_Radians (X : in Degrees) return Radians;
 
    function To_Degrees (X : in Radians) return Degrees;
+   -- Reduces input value to - Two_Pi .. Two_Pi before conversion for large
+   -- values there there will be a loss of percision
 
 end Celestial;
