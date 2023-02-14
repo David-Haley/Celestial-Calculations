@@ -7,8 +7,9 @@
 
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 04/02/2023
+-- Last Edit : 14/02/2023
 
+-- 20230214 : Types Dates and Times added.
 -- 20230204 : Longitude declaration Changed.
 -- 20230102 : Ada.Calendar.Time_Zones.Time_Offset versions of To_Greenwich and
 -- TO_Local added.
@@ -21,62 +22,50 @@ with Celestial; use Celestial;
 
 package Celestial.Time is
 
+   type Dates is record
+      Year : Year_Number;
+      Month : Month_Number;
+      Day : Day_Number;
+   end record; -- Dates
+
+   type Times is record
+      Hour : Hour_Number;
+      Minute : Minute_Number;
+      Second : Second_Number;
+   end record; -- Times
+
    subtype Year_Days is Positive range 1 .. 366;
 
-   Function To_Hours (Hour : in Hour_Number;
-                      Minute : in Minute_Number;
-                      Second : in Second_Number) return Decimal_Hours;
+   Function To_Hours (Time : in Times) return Decimal_Hours;
 
    function To_Hours return Decimal_Hours;
    -- Returns UTC as a decimal.
 
-   procedure To_HHMMSS (Decimal_Hour : in Decimal_Hours;
-                        Hour : out Hour_Number;
-                        Minute : out Minute_Number;
-                        Second : out Second_Number);
+   function To_HHMMSS (Decimal_Hour_In : in Decimal_Hours) return Times;
 
-   -- conversion is the based on abs (Decimal_Hours)
+   -- Conversion reduces the range to 00:00:00 .. 23:59:59, nehative values are
+   -- have 24.0 hours added. 24.0 converts to 00:00:00
 
-   function Julian_Day (Year : in Year_Number;
-                        Month : in Month_Number;
-                        Day : in Day_Number;
-                        Hour : in Hour_Number;
-                        Minute : in Minute_Number;
-                        Second : in Second_Number) return Julian_Days;
+   function Julian_Day (Date : in Dates;
+                        Time : in Times) return Julian_Days;
 
    function Julian_Day return Julian_Days;
 
    procedure From_Julian_Day (Julian_Day : in Julian_Days;
-                              Year : out Year_Number;
-                              Month : out Month_Number;
-                              Day : out Day_Number;
-                              Hour : out Hour_Number;
-                              Minute : out Minute_Number;
-                              Second : out Second_Number);
+                              Date : out Dates;
+                              Time : out Times);
 
    function From_Julian_Day (Julian_Day : in Julian_Days)
                              return Ada.Calendar.Time;
 
-   function Day_of_Year (Year : in Year_Number;
-                        Month : in Month_Number;
-                         Day : in Day_Number) return Year_Days;
+   function Day_of_Year (Date : in Dates) return Year_Days;
    -- Days counting 1 January of year as 1
 
-   function UTC_To_GST (Year : in Year_Number;
-                        Month : in Month_Number;
-                        Day : in Day_Number;
-                        Hour : in Hour_Number;
-                        Minute : in Minute_Number;
-                        Second : in Second_Number) return Decimal_Hours;
+   function UTC_To_GST (Date : in Dates; Time : in Times) return Decimal_Hours;
 
    function UTC_To_GST return Decimal_Hours;
 
-   function GST_To_UTC (Year : in Year_Number;
-                        Month : in Month_Number;
-                        Day : in Day_Number;
-                        Hour : in Hour_Number;
-                        Minute : in Minute_Number;
-                        Second : in Second_Number) return Decimal_Hours;
+   function GST_To_UTC (Date : in Dates; Time : in Times) return Decimal_Hours;
 
    function To_Time_Offset (Longitude : in Longitudes) return Time_Offsets;
    -- Note returns Celestial.Time_Offsets
@@ -86,36 +75,24 @@ package Celestial.Time is
    -- Note returns Ada.Calendar.Time_Zones.Time_Offset
 
    procedure To_Greenwich (Offset : in Time_Offset;
-                           Year : in out Year_Number;
-                           Month : in out Month_Number;
-                           Day : in out Day_Number;
-                           Hour : in out Hour_Number;
-                           Minute : in out Minute_Number;
-                           Second : in out Second_Number);
+                           Date : in out Dates;
+                           Time : in out Times);
    -- Uses Ada.Calendar.Formatting
 
    procedure To_Greenwich (Offset : in Time_Offsets;
-                           Year : in out Year_Number;
-                           Month : in out Month_Number;
-                           Day : in out Day_Number;
+                           Date : in out Dates;
                            Decimal_Hour : in out Decimal_Hours);
    -- Uses Celestial.Time_Offsets which provides higher resolution than the Ada
    -- equivalemt which has one minute resolution or 15' of arc.
 
    procedure To_Local (Offset : in Time_Offset;
-                       Year : in out Year_Number;
-                       Month : in out Month_Number;
-                       Day : in out Day_Number;
-                       Hour : in out Hour_Number;
-                       Minute : in out Minute_Number;
-                       Second : in out Second_Number);
+                       Date : in out Dates;
+                       Time : in out Times);
 
    -- Uses Ada.Calendar.Formatting
 
    procedure To_Local  (Offset : in Time_Offsets;
-                        Year : in out Year_Number;
-                        Month : in out Month_Number;
-                        Day : in out Day_Number;
+                        Date : in out Dates;
                         Decimal_Hour : in out Decimal_Hours);
    -- Uses Celestial.Time_Offsets which provides higher resolution than the Ada
    -- equivalemt which has one minute resolution or 15' of arc.

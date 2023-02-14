@@ -2,7 +2,11 @@ project Celestial is
 
    for Source_Dirs use ("src/**");
    for Object_Dir use "obj";
-   for Main use ("test_coordinates.adb", "test_Orbits.adb", "test_time.adb");
+   for Main use ("test_atan.adb", "test_coordinates.adb", "test_Orbits.adb", "test_time.adb");
+
+   package Compiler is
+      for Switches ("ada") use ("-gnat12");
+   end Compiler;
 
 end Celestial;
 

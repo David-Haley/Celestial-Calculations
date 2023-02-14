@@ -6,8 +6,9 @@
 
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 03/02/2023
+-- Last Edit : 06/02/2023
 
+-- 20230206 : type DDDMMSSs added.
 -- 20230203 : Pi and Other functions section added.
 -- 20230131 : Decimal_Hours, Julian_Days, Radians and Degreed, made types rather
 -- than sub types to render them incompatible, explicit type conversions
@@ -41,9 +42,14 @@ package Celestial is
    Full_Circle : constant := 360;
    type Degrees is new Celestial_Real range
      - Celestial_Real (Full_Circle) .. Celestial_Real (Full_Circle);
-   subtype Degrees_I is Integer range -Full_Circle .. Full_Circle;
-   subtype Minutes_N is Natural range 0 .. Sixty;
-   subtype Seconds_N is Minutes_N;
+   subtype Degrees_N is Natural range 0 .. Full_Circle - 1;
+   subtype Minutes_N is Natural range 0 .. Sixty - 1;
+   subtype Seconds_N is Natural range 0 .. Sixty - 1;
+   type DDDMMSSs is Record
+      Degree : Degrees_N;
+      Minute : Minutes_N;
+      Second : Seconds_N;
+   end record; -- DDDMMSSs
    subtype Semis is Degrees range 0.0 .. Degrees (Full_Circle / 2);
    subtype Quadrents is Degrees range 0.0 .. Degrees (Full_Circle / 4);
 
@@ -55,16 +61,21 @@ package Celestial is
    type Latitudes is record
       Hemisphere : Latitude_Directions;
       Angle : Quadrents;
-   end record; -- Latidudes
+   end record; -- Latitudes
    type Longitudes is record
       Hemisphere : Longitude_Directions;
       Angle : Semis;
    end record; -- Longitudes
 
-   -- Equatorial Coordinated
+   -- Equatorial Coordinates
    subtype Declinations is Degrees range
      -Degrees (Full_Circle / 4) .. Degrees (Full_Circle / 4);
    subtype Right_Ascensions is Decimal_Hours range 0.0 .. Decimal_Hours'Last;
+
+   -- Horizon Coordinates
+   subtype Azimuths is Degrees range 0.0 .. Degrees (Full_Circle);
+   subtype Altitudes is Degrees range
+     -Degrees (Full_Circle / 4) .. Degrees (Full_Circle / 4);
 
    -- Trig Functions overloaded for Degrees not Radians
 

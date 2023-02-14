@@ -2,13 +2,14 @@
 
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 04/02/2023
+-- Last Edit : 14/02/2023
 
+-- 20230214 : Match changes in Dates and Times.
 -- 20230204 : Declaration of Longitude Changed.
 -- 20230202 : Additional tests for Ada.Calendar.Time_Zones.Time_Offset versions
 -- of To_Greenwich and To_Local.
 -- 20230131 : Test for Day_of_Year also test updated for To_Greenwich and
--- _To_Local.
+-- To_Local.
 
 with Ada.Calendar; use Ada.Calendar;
 with Ada.Calendar.Formatting; use Ada.Calendar.Formatting;
@@ -37,89 +38,74 @@ procedure Test_Time is
 
    procedure Test_To_Hours is
 
-      Hour : Hour_Number;
-      Minute : Minute_Number;
-      Second : Second_Number;
+      Time : Times;
 
    begin -- Test_To_Hours
       Put ("Hour: ");
-      Hour_IO.Get (Hour);
+      Hour_IO.Get (Time.Hour);
       Put ("Minute: ");
-      Minute_IO.Get (Minute);
+      Minute_IO.Get (Time.Minute);
       Put ("Second: ");
-      Second_IO.Get (Second);
-      Put_Line ("To_Hours:" &
-                  Decimal_Hours'Image(To_Hours (Hour, Minute, Second)));
+      Second_IO.Get (Time.Second);
+      Put_Line ("To_Hours:" & Decimal_Hours'Image(To_Hours (Time)));
    end Test_To_Hours;
 
    procedure Test_Julian_Day is
 
-      Year : Year_Number;
-      Month : Month_Number;
-      Day : Day_Number;
-      Hour : Hour_Number;
-      Minute : Minute_Number;
-      Second : Second_Number;
+      Date : Dates;
+      Time : times;
 
    begin -- Test_Julian_Day
       Put ("Year: ");
-      Year_IO.Get (Year);
+      Year_IO.Get (Date.Year);
       Put ("Month: ");
-      Month_IO.Get (Month);
+      Month_IO.Get (Date.Month);
       Put ("Day: ");
-      Day_IO.Get (Day);
+      Day_IO.Get (Date.Day);
       Put ("Hour: ");
-      Hour_IO.Get (Hour);
+      Hour_IO.Get (Time.Hour);
       Put ("Minute: ");
-      Minute_IO.Get (Minute);
+      Minute_IO.Get (Time.Minute);
       Put ("Second: ");
-      Second_IO.Get (Second);
-      Put_Line ("Julian Day:" &
-                  Julian_Days'Image(Julian_Day (Year, Month, Day,
-                    Hour, Minute, Second)));
+      Second_IO.Get (Time.Second);
+      Put_Line ("Julian Day:" & Julian_Days'Image(Julian_Day (Date, Time)));
    end Test_Julian_Day;
 
    function Day_Of_Year return Year_Days is
 
-      Year : Year_Number;
-      Month : Month_Number;
-      Day : Day_Number;
+      Date : Dates;
 
    begin -- Day_Of_Year
       Put ("Year: ");
-      Year_IO.Get (Year);
+      Year_IO.Get (Date.Year);
       Put ("Month: ");
-      Month_IO.Get (Month);
+      Month_IO.Get (Date.Month);
       Put ("Day: ");
-      Day_IO.Get (Day);
-      return Day_of_Year (Year, Month, Day);
+      Day_IO.Get (Date.Day);
+      return Day_of_Year (Date);
    end Day_Of_Year;
 
    procedure To_DDMMYYYY is
 
       Julian_Day : Julian_Days;
-      Year : Year_Number;
-      Month : Month_Number;
-      Day : Day_Number;
-      Hour : Hour_Number;
-      Minute : Minute_Number;
-      Second : Second_Number;
+      Date : Dates;
+      Time : Times;
 
    begin -- To_DDMMYYYY
       Put ("Julian Day: ");
       Julian_IO.Get (Julian_Day);
-      From_Julian_Day (Julian_Day, Year, Month, Day, Hour, Minute, Second);
-      Day_IO.Put (Day, 0);
+      From_Julian_Day (Julian_Day, Date, Time);
+      Day_IO.Put (Date.Day, 0);
       Put ('/');
-      Month_IO.Put (Month, 0);
+      Month_IO.Put (Date.Month, 0);
       Put ('/');
-      Year_IO.Put (Year, 0);
+      Year_IO.Put (Date.Year, 0);
       Put ("   ");
-      Hour_IO.Put (Hour, 0);
+      Hour_IO.Put (Time.Hour, 0);
       Put (':');
-      Minute_IO.Put (Minute, 0);
+      Minute_IO.Put (Time.Minute, 0);
       Put (':');
-      Second_IO.Put (Second, 0);
+      Second_IO.Put (Time.Second, 0);
       New_Line;
    end To_DDMMYYYY;
 
@@ -135,266 +121,241 @@ procedure Test_Time is
 
    procedure Test_UTC_To_GST is
 
-      Year : Year_Number;
-      Month : Month_Number;
-      Day : Day_Number;
-      Hour : Hour_Number;
-      Minute : Minute_Number;
-      Second : Second_Number;
+      Date : Dates;
       Decimal_Hour : Decimal_Hours;
+      Time : Times;
 
    begin -- Test_UTC_To_GST
       Put ("Year: ");
-      Year_IO.Get (Year);
+      Year_IO.Get (Date.Year);
       Put ("Month: ");
-      Month_IO.Get (Month);
+      Month_IO.Get (Date.Month);
       Put ("Day: ");
-      Day_IO.Get (Day);
+      Day_IO.Get (Date.Day);
       Put ("Hour: ");
-      Hour_IO.Get (Hour);
+      Hour_IO.Get (Time.Hour);
       Put ("Minute: ");
-      Minute_IO.Get (Minute);
+      Minute_IO.Get (Time.Minute);
       Put ("Second: ");
-      Second_IO.Get (Second);
-      Decimal_Hour := UTC_To_GST (Year, Month, Day, Hour, Minute, Second);
+      Second_IO.Get (Time.Second);
+      Decimal_Hour := UTC_To_GST (Date, Time);
       Put ("GST:" & Decimal_Hours'Image (Decimal_Hour) & " or ");
-      To_HHMMSS (Decimal_Hour, Hour, Minute, Second);
-      Hour_IO.Put (Hour, 0);
+      Time := To_HHMMSS (Decimal_Hour);
+      Hour_IO.Put (Time.Hour, 0);
       Put (':');
-      Minute_IO.Put (Minute, 0);
+      Minute_IO.Put (Time.Minute, 0);
       Put (':');
-      Second_IO.Put (Second, 0);
+      Second_IO.Put (Time.Second, 0);
       New_Line;
    end Test_UTC_To_GST;
 
    procedure Current_UTC_To_GST is
-      Hour : Hour_Number;
-      Minute : Minute_Number;
-      Second : Second_Number;
+
       Decimal_Hour : Decimal_Hours;
+      Time : Times;
 
    begin -- Current_UTC_To_GST
       Decimal_Hour := UTC_To_GST;
       Put ("GST:" & Decimal_Hours'Image (Decimal_Hour) & " or ");
-      To_HHMMSS (Decimal_Hour, Hour, Minute, Second);
-      Hour_IO.Put (Hour, 0);
+      Time := To_HHMMSS (Decimal_Hour);
+      Hour_IO.Put (Time.Hour, 0);
       Put (':');
-      Minute_IO.Put (Minute, 0);
+      Minute_IO.Put (Time.Minute, 0);
       Put (':');
-      Second_IO.Put (Second, 0);
+      Second_IO.Put (Time.Second, 0);
       New_Line;
    end Current_UTC_To_GST;
 
    procedure Test_GST_To_UTC is
-
-      Year : Year_Number;
-      Month : Month_Number;
-      Day : Day_Number;
-      Hour : Hour_Number;
-      Minute : Minute_Number;
-      Second : Second_Number;
+      Date : Dates;
+      Time : Times;
       Decimal_Hour : Decimal_Hours;
 
    begin -- Test_GST_To_UTC
       Put ("Year: ");
-      Year_IO.Get (Year);
+      Year_IO.Get (Date.Year);
       Put ("Month: ");
-      Month_IO.Get (Month);
+      Month_IO.Get (Date.Month);
       Put ("Day: ");
-      Day_IO.Get (Day);
+      Day_IO.Get (Date.Day);
       Put ("Hour: ");
-      Hour_IO.Get (Hour);
+      Hour_IO.Get (Time.Hour);
       Put ("Minute: ");
-      Minute_IO.Get (Minute);
+      Minute_IO.Get (Time.Minute);
       Put ("Second: ");
-      Second_IO.Get (Second);
-      Decimal_Hour := GST_To_UTC (Year, Month, Day, Hour, Minute, Second);
+      Second_IO.Get (Time.Second);
+      Decimal_Hour := GST_To_UTC (Date, Time);
       Put ("UTC:" & Decimal_Hours'Image (Decimal_Hour) & " or ");
-      To_HHMMSS (Decimal_Hour, Hour, Minute, Second);
-      Hour_IO.Put (Hour, 0);
+      Time := To_HHMMSS (Decimal_Hour);
+      Hour_IO.Put (Time.Hour, 0);
       Put (':');
-      Minute_IO.Put (Minute, 0);
+      Minute_IO.Put (Time.Minute, 0);
       Put (':');
-      Second_IO.Put (Second, 0);
+      Second_IO.Put (Time.Second, 0);
       New_Line;
    end Test_GST_To_UTC;
 
    procedure Local_To_Greenwich_Civil is
 
-      Year : Year_Number;
-      Month : Month_Number;
-      Day : Day_Number;
+      Date : Dates;
+      Time : Times;
       Offset : Time_Offset;
-      Hour : Hour_Number;
-      Minute : Minute_Number;
-      Second : Second_Number;
 
    begin -- Local_To_Greenwich_Civil
       Put ("Year: ");
-      Year_IO.Get (Year);
+      Year_IO.Get (Date.Year);
       Put ("Month: ");
-      Month_IO.Get (Month);
+      Month_IO.Get (Date.Month);
       Put ("Day: ");
-      Day_IO.Get (Day);
+      Day_IO.Get (Date.Day);
       Put ("Hour: ");
-      Hour_IO.Get (Hour);
+      Hour_IO.Get (Time.Hour);
       Put ("Minute: ");
-      Minute_IO.Get (Minute);
+      Minute_IO.Get (Time.Minute);
       Put ("Second: ");
-      Second_IO.Get (Second);
-      Put ("Offset (Minutes): ");      Offset_IO.Get (Offset);
-      To_Greenwich (Offset, Year, Month, Day, Hour, Minute, Second);
+      Second_IO.Get (Time.Second);
+      Put ("Offset (Minutes): ");
+      Offset_IO.Get (Offset);
+      To_Greenwich (Offset, Date, Time);
       Put ("Greenwich: ");
-      Hour_IO.Put (Hour, 0);
+      Hour_IO.Put (Time.Hour, 0);
       Put (':');
-      Minute_IO.Put (Minute, 0);
+      Minute_IO.Put (Time.Minute, 0);
       Put (':');
-      Second_IO.Put (Second, 0);
+      Second_IO.Put (Time.Second, 0);
       Put (" on ");
-      Day_IO.Put (Day, 0);
+      Day_IO.Put (Date.Day, 0);
       Put ('/');
-      Month_IO.Put (Month, 0);
+      Month_IO.Put (Date.Month, 0);
       Put ('/');
-      Year_IO.Put (Year, 0);
+      Year_IO.Put (Date.Year, 0);
       New_Line;
    end Local_To_Greenwich_Civil;
 
    procedure Local_To_Greenwich is
 
-      Year : Year_Number;
-      Month : Month_Number;
-      Day : Day_Number;
+      Date : Dates;
       Decimal_Hour : Decimal_Hours;
       Longitude : Longitudes;
       Offset : Time_Offsets;
-      Hour : Hour_Number;
-      Minute : Minute_Number;
-      Second : Second_Number;
+      Time : Times;
 
    begin -- Local_To_Greenwich
       Put ("Year: ");
-      Year_IO.Get (Year);
+      Year_IO.Get (Date.Year);
       Put ("Month: ");
-      Month_IO.Get (Month);
+      Month_IO.Get (Date.Month);
       Put ("Day: ");
-      Day_IO.Get (Day);
+      Day_IO.Get (Date.Day);
       Put ("Hour: ");
-      Hour_IO.Get (Hour);
+      Hour_IO.Get (Time.Hour);
       Put ("Minute: ");
-      Minute_IO.Get (Minute);
+      Minute_IO.Get (Time.Minute);
       Put ("Second: ");
-      Second_IO.Get (Second);
-      Decimal_Hour := To_Hours (Hour, Minute, Second);
+      Second_IO.Get (Time.Second);
+      Decimal_Hour := To_Hours (Time);
       Put ("Longitude.Angle: ");
       Semis_IO.Get (Longitude.Angle);
       Put ("Longitude.Hemisphere: ");
       Direction_IO.Get (Longitude.Hemisphere);
       Offset := To_Time_Offset (Longitude);
       Put ("Offset:" & Decimal_Hours'Image (Offset) & "  ");
-      To_Greenwich (Offset, Year, Month, Day, Decimal_Hour);
+      To_Greenwich (Offset, Date, Decimal_Hour);
       Put ("Greenwich:" & Decimal_Hours'Image (Decimal_Hour) & " or ");
-      To_HHMMSS (Decimal_Hour, Hour, Minute, Second);
-      Hour_IO.Put (Hour, 0);
+      Time := To_HHMMSS (Decimal_Hour);
+      Hour_IO.Put (Time.Hour, 0);
       Put (':');
-      Minute_IO.Put (Minute, 0);
+      Minute_IO.Put (Time.Minute, 0);
       Put (':');
-      Second_IO.Put (Second, 0);
+      Second_IO.Put (Time.Second, 0);
       Put (" on ");
-      Day_IO.Put (Day, 0);
+      Day_IO.Put (Date.Day, 0);
       Put ('/');
-      Month_IO.Put (Month, 0);
+      Month_IO.Put (Date.Month, 0);
       Put ('/');
-      Year_IO.Put (Year, 0);
+      Year_IO.Put (Date.Year, 0);
       New_Line;
    end Local_To_Greenwich;
 
    procedure Greenwich_To_Local_Civil is
 
-      Year : Year_Number;
-      Month : Month_Number;
-      Day : Day_Number;
+      Date : Dates;
       Offset : Time_Offset;
-      Hour : Hour_Number;
-      Minute : Minute_Number;
-      Second : Second_Number;
+      Time : Times;
 
    begin -- Greenwich_To_Local_Civil
       Put ("Year: ");
-      Year_IO.Get (Year);
+      Year_IO.Get (Date.Year);
       Put ("Month: ");
-      Month_IO.Get (Month);
+      Month_IO.Get (Date.Month);
       Put ("Day: ");
-      Day_IO.Get (Day);
+      Day_IO.Get (Date.Day);
       Put ("Hour: ");
-      Hour_IO.Get (Hour);
+      Hour_IO.Get (Time.Hour);
       Put ("Minute: ");
-      Minute_IO.Get (Minute);
+      Minute_IO.Get (Time.Minute);
       Put ("Second: ");
-      Second_IO.Get (Second);
+      Second_IO.Get (Time.Second);
       Put ("Offset (Minures): ");
       Offset_IO.Get (Offset);
-      To_Local (Offset, Year, Month, Day, Hour, Minute, Second);
+      To_Local (Offset, Date, Time);
       Put ("Local:");
-      Hour_IO.Put (Hour, 0);
+      Hour_IO.Put (Time.Hour, 0);
       Put (':');
-      Minute_IO.Put (Minute, 0);
+      Minute_IO.Put (Time.Minute, 0);
       Put (':');
-      Second_IO.Put (Second, 0);
+      Second_IO.Put (Time.Second, 0);
       Put (" on ");
-      Day_IO.Put (Day, 0);
+      Day_IO.Put (Date.Day, 0);
       Put ('/');
-      Month_IO.Put (Month, 0);
+      Month_IO.Put (Date.Month, 0);
       Put ('/');
-      Year_IO.Put (Year, 0);
+      Year_IO.Put (Date.Year, 0);
       New_Line;
    end Greenwich_To_Local_Civil;
 
    procedure Greenwich_To_Local is
 
-      Year : Year_Number;
-      Month : Month_Number;
-      Day : Day_Number;
+      Date : Dates;
       Decimal_Hour : Decimal_Hours;
       Longitude : Longitudes;
       Offset : Time_Offsets;
-      Hour : Hour_Number;
-      Minute : Minute_Number;
-      Second : Second_Number;
+      Time : Times;
 
    begin -- Greenwich_To_Local
       Put ("Year: ");
-      Year_IO.Get (Year);
+      Year_IO.Get (Date.Year);
       Put ("Month: ");
-      Month_IO.Get (Month);
+      Month_IO.Get (Date.Month);
       Put ("Day: ");
-      Day_IO.Get (Day);
+      Day_IO.Get (Date.Day);
       Put ("Hour: ");
-      Hour_IO.Get (Hour);
+      Hour_IO.Get (Time.Hour);
       Put ("Minute: ");
-      Minute_IO.Get (Minute);
+      Minute_IO.Get (Time.Minute);
       Put ("Second: ");
-      Second_IO.Get (Second);
-      Decimal_Hour := To_Hours (Hour, Minute, Second);
+      Second_IO.Get (Time.Second);
+      Decimal_Hour := To_Hours (Time);
       Put ("Longitude.Amgle: ");
       Semis_IO.Get (Longitude.Angle);
       Put ("Longitude.Hemishpere: ");
       Direction_IO.Get (Longitude.Hemisphere);
       Offset := To_Time_Offset (Longitude);
       Put ("Offset:" & Decimal_Hours'Image (Offset) & "  ");
-      To_Local (Offset, Year, Month, Day, Decimal_Hour);
+      To_Local (Offset, Date, Decimal_Hour);
       Put ("Local:" & Decimal_Hours'Image (Decimal_Hour) & " or ");
-      To_HHMMSS (Decimal_Hour, Hour, Minute, Second);
-      Hour_IO.Put (Hour, 0);
+      Time := To_HHMMSS (Decimal_Hour);
+      Hour_IO.Put (Time.Hour, 0);
       Put (':');
-      Minute_IO.Put (Minute, 0);
+      Minute_IO.Put (Time.Minute, 0);
       Put (':');
-      Second_IO.Put (Second, 0);
+      Second_IO.Put (Time.Second, 0);
       Put (" on ");
-      Day_IO.Put (Day, 0);
+      Day_IO.Put (Date.Day, 0);
       Put ('/');
-      Month_IO.Put (Month, 0);
+      Month_IO.Put (Date.Month, 0);
       Put ('/');
-      Year_IO.Put (Year, 0);
+      Year_IO.Put (Date.Year, 0);
       New_Line;
    end Greenwich_To_Local;
 
