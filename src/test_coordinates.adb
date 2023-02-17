@@ -1,8 +1,9 @@
 -- Test program for Celestial.Coordinates
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 06/02/2023
+-- Last Edit : 17/02/2023
 
+-- 20230217 : Obliquity of the Ecliptic added.
 -- 20230206 : test Degrees to DDMMSS
 -- 20230205 : To_Angle conversion errors reported, tests conversion from Horison
 -- to Equatorial Coordinates.
@@ -13,11 +14,14 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
 with Ada.Characters.Handling; use Ada.Characters.Handling;
 with Celestial; use Celestial;
+with Celestial.Time; use Celestial.Time;
 with Celestial.Coordinates; use Celestial.Coordinates;
 
 procedure Test_Coordinates is
 
-   Test : Character;
+   package Year_IO is new Ada.Text_IO.Integer_IO (Year_Number);
+   package Month_IO is new Ada.Text_IO.Integer_IO (Month_Number);
+   package Day_IO is new Ada.Text_IO.Integer_IO (Day_Number);
 
    package Radian_IO is new Ada.Text_IO.Float_IO (Radians);
    package Time_Offset_IO is new Ada.Text_IO.Float_IO (Celestial.Time_Offsets);
@@ -130,6 +134,22 @@ procedure Test_Coordinates is
                   To_Hour_Angle (Altitude, Azimuth, Latitude)'Img);
    end To_Equatorial_AAL;
 
+   procedure Obliquity_Ecliptic is
+
+      Date : Dates;
+
+   begin -- Obliquity_Ecliptic
+      Put ("Year: ");
+      Year_IO.Get (Date.Year);
+      Put ("Month: ");
+      Month_IO.Get (Date.Month);
+      Put ("Day: ");
+      Day_IO.Get (Date.Day);
+      Put_Line ("Obliquity of the Ecliptic:" & Obliquity_Ecliptic (Date)'Img);
+   end Obliquity_Ecliptic;
+
+   Test : Character;
+
 begin --  Test_Coordinates
    loop -- Perform one test
       Put_Line ("A Degrees to DDMMSS");
@@ -139,6 +159,7 @@ begin --  Test_Coordinates
       Put_Line ("E To Longitude (Degrees)");
       Put_Line ("F To Longitude (Time_Offset)");
       Put_Line ("G To Equatorial (Altitude, Azimuth, Latitude)");
+      Put_Line ("H Obliquity of the Ecliptic (Date)");
       Put_Line ("0 Exit tests");
       Put ("Test: ");
       Get (Test);
@@ -158,6 +179,8 @@ begin --  Test_Coordinates
             To_Longitude_To;
          when 'G' =>
             To_Equatorial_AAL;
+         when 'H' =>
+            Obliquity_Ecliptic;
          when others =>
             Put_Line ("Unknown test: '" & Test & "'");
       end case; -- Test

@@ -7,8 +7,10 @@
 
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 14/02/2023
+-- Last Edit : 17/02/2023
 
+-- 20230217 : Correction to Day_of_Year to prevent an exception being raised on
+-- 1 January.
 -- 20230214 : Typs Dates and Times added.
 -- 20230204 : Longitude declaration Changed.
 -- 20230102 : Ada.Calendar.Time_Zones.Time_Offset versions of To_Greenwich and
@@ -155,7 +157,7 @@ package body Celestial.Time is
 
    function Day_of_Year (Date : in Dates) return Year_Days is
      (Year_Days (J_D'Rounding (Julian_Day (Date, (0, 0, 0))
-      - Julian_Day ((Date.Year, 1, 1), (0, 0, 0)))) + 1);
+      - Julian_Day ((Date.Year, 1, 1), (0, 0, 0))) + 1.0));
    -- Days counting 1 January of year as 1
 
    function UTC_To_GST (Date : in Dates;

@@ -2,8 +2,9 @@
 -- systems. Algorithms are based on Celestial Calculations by J L Lawrence.
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 05/01/2023
+-- Last Edit : 17/02/2023
 
+-- 20230217 : Obliquity of the Ecliptic added.
 -- 20230205 : functions releted to Hour Angle and Right Ascension added.
 -- 20230204 : To_Degrees and To_Radians transferred to Celestial;
 
@@ -214,5 +215,24 @@ package body Celestial.Coordinates is
       return Right_Ascensions (H_A_Degrees / Degrees (Full_Circle) *
                               Degrees (Full_Day));
    end To_Hour_Angle;
+
+   function Obliquity_Ecliptic (Date : in Dates) return Degrees is
+
+      -- Obliquity of the Ecliptic Uses JPL equation,
+      -- valid for dates after 1 January 2000.
+
+      E0 : constant Celestial_Real :=
+        23.0 + (21.448 / C_R (Sixty) + 26.0) / C_R (Sixty);
+      E1 : constant Celestial_Real := -46.815 / C_R (Sixty) / C_R (Sixty);
+      E2 : constant Celestial_Real := -0.00059 / C_R (Sixty) / C_R (Sixty);
+      E3 : constant Celestial_Real := 0.001813 / C_R (Sixty) / C_R (Sixty);
+      T : Celestial_Real;
+
+   begin -- Obliquity_Ecliptic
+      T := C_R (Julian_Day (Date, (0, 0, 0)) -
+                  Julian_Day ((2000, 1, 1), (12, 0, 0))) / 36525.0;
+      -- T is Julian centuaries since 12:00:00 on 01/01/2000
+      return Degrees (E0 + E1 * T + E2 * T ** 2 + E3 * T ** 3);
+   end Obliquity_Ecliptic;
 
 end Celestial.Coordinates;

@@ -2,12 +2,14 @@
 -- systems. Algorithms are based on Celestial Calculations by J L Lawrence.
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 06/02/2023
+-- Last Edit : 17/02/2023
 
+-- 20230217 : Obliquity of the Ecliptic added.
 -- 20230206 : functions releted to Hour Angle and Right Ascension added.
 -- 20230204 : To_Degrees and To_Radians transferred to Celestial;
 
 with Celestial; use Celestial;
+with Celestial.Time; use Celestial.Time;
 
 package Celestial.Coordinates is
 
@@ -62,5 +64,9 @@ package Celestial.Coordinates is
    function To_Hour_Angle (Altitude : in Altitudes;
                            Azimuth : in Azimuths;
                            Latitude : in Latitudes) return Right_Ascensions;
+
+   function Obliquity_Ecliptic (Date : in Dates) return Degrees;
+   -- Obliquity of the Ecliptic Uses JPL equation,
+   -- valid for dates after 1 January 2000.
 
 end Celestial.Coordinates;
