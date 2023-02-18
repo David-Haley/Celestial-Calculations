@@ -2,8 +2,10 @@
 -- systems. Algorithms are based on Celestial Calculations by J L Lawrence.
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 17/02/2023
+-- Last Edit : 18/02/2023
 
+-- 20230218 : To_Altitude and To_Azimuth added. Correction to To_DDDMMSS to
+-- round up to the nearest second.
 -- 20230217 : Obliquity of the Ecliptic added.
 -- 20230205 : functions releted to Hour Angle and Right Ascension added.
 -- 20230204 : To_Degrees and To_Radians transferred to Celestial;
@@ -30,7 +32,9 @@ package body Celestial.Coordinates is
    -- Reduces angle to range 0 <= Angle < 360.0 before conversion to
    -- Conversion to Degrees, Minutes and Seconds.
 
+      Half_Second : constant Degrees := Degrees (0.5 / C_R (Sixty * Sixty));
       Angle : Degrees := Angle_In;
+      Check : Degrees;
       Result : DDDMMSSs;
 
    begin -- To_DDDMMSS
@@ -41,11 +45,30 @@ package body Celestial.Coordinates is
          Angle := Angle - Degrees'Truncation (Angle / Degrees (Full_Circle)) *
            Degrees (Full_Circle);
       end if; -- Angle >= Degrees (Full_Circle)
+      Check := Angle;
       Result.Degree := Degrees_N (Degrees'Truncation (Angle));
       Angle := (Angle - Degrees (Result.Degree)) * Degrees (Sixty);
       Result.Minute := Minutes_N (Degrees'Truncation (Angle));
       Angle := (Angle - Degrees (Result.Minute)) * Degrees (Sixty);
       Result.Second := Seconds_N (Degrees'Truncation (Angle));
+      if Check - To_Degrees (Result) > Half_Second then
+         -- Add one second to result if seconds should be rounded up
+         if Result.Second < Seconds_N'Last then
+            Result.Second := Result.Second + 1;
+         else
+            Result.Second := 0;
+            if Result.Minute < Minutes_N'Last then
+               Result.Minute := Result.Minute + 1;
+            else
+               Result.Minute := 0;
+               if Result.Degree < Degrees_N'Last then
+                  Result.Degree := Result.Degree + 1;
+               else
+                  Result.Degree := 0;
+               end if; -- Result.Degree < Degrees_N'Last
+            end if; -- Result.Minute < Minutes_N'Last
+         end if; -- Result.Second < Seconds_N'Last
+      end if; -- Check - To_Degrees (Result) > Half_Second
       return Result;
    end To_DDDMMSS;
 
@@ -216,6 +239,44 @@ package body Celestial.Coordinates is
                               Degrees (Full_Day));
    end To_Hour_Angle;
 
+   -- Convert from Equatorial to Horizon given Declination, Hour Angle and
+   -- Latitude, calculate Altitude and Azimuth.
+
+   function To_Altitude (Declination : in Declinations;
+                         Hour_Angle : in Right_Ascensions;
+                         Latitude : in Latitudes) return Altitudes is
+
+      Lat : constant Degrees := To_Angle (Latitude);
+      H_A : constant Degrees :=
+        Degrees (C_R (Hour_Angle) / C_R (Full_Day) * C_R (Full_Circle));
+
+   begin -- To_Altitude
+      return Arcsin (Sin (Declination) * Sin (Lat) +
+                       Cos (Declination) * Cos (Lat) * Cos (H_A));
+   end To_Altitude;
+
+   function To_Azimuth (Declination : in Declinations;
+                        Hour_Angle : in Right_Ascensions;
+                        Latitude : in Latitudes) return Azimuths is
+
+      Lat : constant Degrees := To_Angle (Latitude);
+      H_A : constant Degrees :=
+        Degrees (C_R (Hour_Angle) / C_R (Full_Day) * C_R (Full_Circle));
+      Alt : constant Degrees := To_Altitude (Declination, Hour_Angle, Latitude);
+
+   begin -- To_Azimuth
+      if Sin (H_A) >= 0.0 then
+         return Degrees (Full_Circle) - Arccos ((Sin (Declination) -
+                                                  Sin (Lat) * Sin (Alt)) /
+                                                  (Cos (Lat) * Cos (Alt)));
+      else
+         return Arccos ((Sin (Declination) - Sin (Lat) * Sin (Alt)) /
+                          (Cos (Lat) * Cos (Alt)));
+      end if; -- Sin (H_A) >= 0.0
+   end To_Azimuth;
+
+   -- Required for conversions to and from Ecliptic coordinates.
+
    function Obliquity_Ecliptic (Date : in Dates) return Degrees is
 
       -- Obliquity of the Ecliptic Uses JPL equation,
@@ -231,7 +292,7 @@ package body Celestial.Coordinates is
    begin -- Obliquity_Ecliptic
       T := C_R (Julian_Day (Date, (0, 0, 0)) -
                   Julian_Day ((2000, 1, 1), (12, 0, 0))) / 36525.0;
-      -- T is Julian centuaries since 12:00:00 on 01/01/2000
+      -- T is Julian centuries since 12:00:00 on 01/01/2000
       return Degrees (E0 + E1 * T + E2 * T ** 2 + E3 * T ** 3);
    end Obliquity_Ecliptic;
 

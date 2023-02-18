@@ -3,6 +3,7 @@
 -- Created   : 25/03/2020
 -- Last Edit : 17/02/2023
 
+-- 20230218 : To_Altitude and To_Azimuth added.
 -- 20230217 : Obliquity of the Ecliptic added.
 -- 20230206 : test Degrees to DDMMSS
 -- 20230205 : To_Angle conversion errors reported, tests conversion from Horison
@@ -22,10 +23,15 @@ procedure Test_Coordinates is
    package Year_IO is new Ada.Text_IO.Integer_IO (Year_Number);
    package Month_IO is new Ada.Text_IO.Integer_IO (Month_Number);
    package Day_IO is new Ada.Text_IO.Integer_IO (Day_Number);
-
+   package Hour_IO is new Ada.Text_IO.Integer_IO (Hour_Number);
+   package Minute_IO is new Ada.Text_IO.Integer_IO (Minute_Number);
+   package Second_IO is new Ada.Text_IO.Integer_IO (Second_Number);
    package Radian_IO is new Ada.Text_IO.Float_IO (Radians);
    package Time_Offset_IO is new Ada.Text_IO.Float_IO (Celestial.Time_Offsets);
    package Degree_IO is new Ada.Text_IO.Float_IO (Degrees);
+   package DDD_IO is new Ada.Text_IO.Integer_IO (Degrees_N);
+   package MM_IO is new Ada.Text_IO.Integer_IO (Minutes_N);
+   package SS_IO is new Ada.Text_IO.Integer_IO (Seconds_N);
    package Latitude_Direction_IO is new
      Ada.Text_IO.Enumeration_IO (Latitude_Directions);
 
@@ -38,11 +44,22 @@ procedure Test_Coordinates is
       Put ("Angle: ");
       Degree_IO.Get (Angle);
       DDDMMSS := To_DDDMMSS (Angle);
-      Put_Line (DDDMMSS.Degree'Img & Ada.Characters.Latin_1.Degree_Sign &
-                  DDDMMSS.Minute'Img & "'" & DDDMMSS.Second'Img & """"
-                & " Difference: " &
-                  Degrees'Image (Angle - To_Degrees (DDDMMSS)));
+      Put_Line ("Angle:" & DDDMMSS.Degree'Img &
+                  Ada.Characters.Latin_1.Degree_Sign &
+                  DDDMMSS.Minute'Img & "'" & DDDMMSS.Second'Img & """");
    end To_DDDMMSS;
+
+   procedure To_Degrees is
+
+      Angle : DDDMMSSs;
+
+   begin -- To_Degrees
+      Put ("Angle in DDD MM SS format: ");
+      DDD_IO.Get (Angle.Degree);
+      MM_IO.Get (Angle.Minute);
+      SS_IO.Get (Angle.Second);
+      Put_Line ("Angle:" & To_Degrees (Angle)'Img);
+   end To_Degrees;
 
    procedure To_Latitude_R is
 
@@ -134,6 +151,31 @@ procedure Test_Coordinates is
                   To_Hour_Angle (Altitude, Azimuth, Latitude)'Img);
    end To_Equatorial_AAL;
 
+   procedure To_Horizon is
+
+      Declination : Declinations;
+      Hour_Angle : Right_Ascensions;
+      H_A : Times;
+      Latitude : Latitudes;
+
+   begin -- To_Horizon
+      Put ("Declination: ");
+      Degree_IO.Get (Declination);
+      Put ("Hour Angle in HH MM SS format: ");
+      Hour_IO.Get (H_A.Hour);
+      Minute_IO.Get (H_A.Minute);
+      Second_IO.Get (H_A.Second);
+      Hour_Angle := To_Hours (H_A);
+      Put ("Latitude.Hemisphere: ");
+      Latitude_Direction_IO.Get (Latitude.Hemisphere);
+      Put ("Latitude.Angle: ");
+      Degree_IO.Get (Latitude.Angle);
+      Put_Line ("Altitude:" &
+                  To_Altitude (Declination, Hour_Angle, Latitude)'Img &
+                  " Azimuth:" &
+                  To_Azimuth (Declination, Hour_Angle, Latitude)'Img);
+   end To_Horizon;
+
    procedure Obliquity_Ecliptic is
 
       Date : Dates;
@@ -152,14 +194,16 @@ procedure Test_Coordinates is
 
 begin --  Test_Coordinates
    loop -- Perform one test
-      Put_Line ("A Degrees to DDMMSS");
-      Put_Line ("B To Latitude (Radians)");
-      Put_Line ("C To Latitude (Degrees)");
-      Put_Line ("D To Longitude (Radians)");
-      Put_Line ("E To Longitude (Degrees)");
-      Put_Line ("F To Longitude (Time_Offset)");
-      Put_Line ("G To Equatorial (Altitude, Azimuth, Latitude)");
-      Put_Line ("H Obliquity of the Ecliptic (Date)");
+      Put_Line ("A Degrees to DDDMMSS");
+      Put_Line ("B DDDMMSS to Degrees");
+      Put_Line ("C To Latitude (Radians)");
+      Put_Line ("D To Latitude (Degrees)");
+      Put_Line ("E To Longitude (Radians)");
+      Put_Line ("F To Longitude (Degrees)");
+      Put_Line ("G To Longitude (Time_Offset)");
+      Put_Line ("H To Equatorial (Altitude, Azimuth, Latitude)");
+      Put_Line ("I To Horizon (Declination, Hour Angle, Latitude)");
+      Put_Line ("J Obliquity of the Ecliptic (Date)");
       Put_Line ("0 Exit tests");
       Put ("Test: ");
       Get (Test);
@@ -167,19 +211,23 @@ begin --  Test_Coordinates
       case To_Upper (Test) is
          when 'A' =>
             To_DDDMMSS;
-         WHEN 'B' =>
-            To_Latitude_R;
+         when 'B' =>
+            To_Degrees;
          when 'C' =>
-            To_Latitude_D;
+            To_Latitude_R;
          when 'D' =>
-            To_Longitude_R;
+            To_Latitude_D;
          when 'E' =>
-             To_Longitude_D;
+            To_Longitude_R;
          when 'F' =>
-            To_Longitude_To;
+             To_Longitude_D;
          when 'G' =>
-            To_Equatorial_AAL;
+            To_Longitude_To;
          when 'H' =>
+            To_Equatorial_AAL;
+         when 'I' =>
+            To_Horizon;
+         when 'J' =>
             Obliquity_Ecliptic;
          when others =>
             Put_Line ("Unknown test: '" & Test & "'");

@@ -4,6 +4,7 @@
 -- Created   : 24/11/2019
 -- Last Edit : 14/02/2023
 
+-- 20230218 : Test for To_HHMMSS added;
 -- 20230214 : Match changes in Dates and Times.
 -- 20230204 : Declaration of Longitude Changed.
 -- 20230202 : Additional tests for Ada.Calendar.Time_Zones.Time_Offset versions
@@ -41,14 +42,29 @@ procedure Test_Time is
       Time : Times;
 
    begin -- Test_To_Hours
-      Put ("Hour: ");
+      Put ("Time in HH MM SS format: ");
       Hour_IO.Get (Time.Hour);
-      Put ("Minute: ");
       Minute_IO.Get (Time.Minute);
-      Put ("Second: ");
       Second_IO.Get (Time.Second);
       Put_Line ("To_Hours:" & Decimal_Hours'Image(To_Hours (Time)));
    end Test_To_Hours;
+
+   procedure To_HHMMSS is
+
+      Time_In : Decimal_Hours;
+      Time : Times;
+
+   begin -- To_HHMMSS
+      Put ("Time in HH.hhhh format: ");
+      Decimal_IO.Get (Time_In);
+      Time := To_HHMMSS (Time_In);
+      Hour_IO.Put (Time.Hour, 0);
+      Put (':');
+      Minute_IO.Put (Time.Minute, 0);
+      Put (':');
+      Second_IO.Put (Time.Second, 0);
+      New_Line;
+   end To_HHMMSS;
 
    procedure Test_Julian_Day is
 
@@ -362,19 +378,20 @@ procedure Test_Time is
 begin -- Test_Time
    loop -- Perform one test
       Put_Line ("A HH:MM:SS to HH.hhhh");
-      Put_Line ("B Current UTC to HH.hhhh");
-      Put_Line ("C DD/MM/YYYY HH:MM:SS to Julian Days");
-      Put_Line ("D Current UTC to Julian Days");
-      Put_Line ("E Day of Year, from 1 January of year");
-      Put_Line ("F Julian Day to DD/MM/YYYY HH:MM:SS");
-      Put_Line ("G Julian Day to Ada.Calendar.Time");
-      Put_Line ("H UTC to GST");
-      Put_Line ("I Current_UTC to GST");
-      Put_Line ("J GST to UTC");
-      Put_Line ("K Local Time to Greenwich Time (offest MMMM)");
-      Put_Line ("L Local Time to Greenwich Time (longitude)");
-      Put_Line ("M Greenwich Time to Local Time (offest MMMM)");
-      Put_Line ("N Greenwich Time to Local Time (longitude)");
+      Put_Line ("B HH.hhhh to HH:MM:SS");
+      Put_Line ("C Current UTC to HH.hhhh");
+      Put_Line ("D DD/MM/YYYY HH:MM:SS to Julian Days");
+      Put_Line ("E Current UTC to Julian Days");
+      Put_Line ("F Day of Year, from 1 January of year");
+      Put_Line ("G Julian Day to DD/MM/YYYY HH:MM:SS");
+      Put_Line ("H Julian Day to Ada.Calendar.Time");
+      Put_Line ("I UTC to GST");
+      Put_Line ("J Current_UTC to GST");
+      Put_Line ("K GST to UTC");
+      Put_Line ("L Local Time to Greenwich Time (offest MMMM)");
+      Put_Line ("M Local Time to Greenwich Time (longitude)");
+      Put_Line ("N Greenwich Time to Local Time (offest MMMM)");
+      Put_Line ("O Greenwich Time to Local Time (longitude)");
       Put_Line ("0 Exit tests");
       Put ("Test: ");
       Get (Test);
@@ -383,30 +400,32 @@ begin -- Test_Time
          when 'A' =>
             Test_To_Hours;
          when 'B'  =>
+            To_HHMMSS;
+         when 'C'  =>
             Put_Line ("To_Hours:" & Decimal_Hours'Image (To_Hours));
-         when 'C' =>
-            Test_Julian_Day;
          when 'D' =>
-            Put_Line ("Julian Day:" & Julian_Days'Image (Julian_Day));
+            Test_Julian_Day;
          when 'E' =>
-            Put_Line ("Day of Year:" & Day_of_Year'Img);
+            Put_Line ("Julian Day:" & Julian_Days'Image (Julian_Day));
          when 'F' =>
-            To_DDMMYYYY;
+            Put_Line ("Day of Year:" & Day_of_Year'Img);
          when 'G' =>
-            To_Calandar;
+            To_DDMMYYYY;
          when 'H' =>
-            Test_UTC_To_GST;
+            To_Calandar;
          when 'I' =>
-            Current_UTC_To_GST;
+            Test_UTC_To_GST;
          when 'J' =>
-            Test_GST_To_UTC;
+            Current_UTC_To_GST;
          when 'K' =>
-            Local_To_Greenwich_Civil;
+            Test_GST_To_UTC;
          when 'L' =>
-            Local_To_Greenwich;
+            Local_To_Greenwich_Civil;
          when 'M' =>
-            Greenwich_To_Local_Civil;
+            Local_To_Greenwich;
          when 'N' =>
+            Greenwich_To_Local_Civil;
+         when 'O' =>
             Greenwich_To_Local;
          when others =>
             Put_Line ("Unknown test: '" & Test & "'");

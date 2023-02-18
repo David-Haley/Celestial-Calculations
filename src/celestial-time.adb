@@ -9,6 +9,7 @@
 -- Created   : 24/11/2019
 -- Last Edit : 17/02/2023
 
+-- 20230218 : Correction to To_HHMMSS to round up seconds if appropriate.
 -- 20230217 : Correction to Day_of_Year to prevent an exception being raised on
 -- 1 January.
 -- 20230214 : Typs Dates and Times added.
@@ -49,24 +50,44 @@ package body Celestial.Time is
 
    function To_HHMMSS (Decimal_Hour_In : in Decimal_Hours) return Times is
 
-   -- Conversion reduces the range to 00:00:00 .. 23:59:59, nehative values are
-   -- have 24.0 hours added. 24.0 converts to 00:00:00
+      -- Conversion reduces the range to 00:00:00 .. 23:59:59, nehative values are
+      -- have 24.0 hours added. 24.0 converts to 00:00:00
 
+      Half_Second : constant Decimal_Hours := D_H (0.5 / C_R (Sixty * Sixty));
       Decimal_Hour : Celestial_Real := C_R (Decimal_Hour_In);
+      Check : Decimal_Hours;
       Result : Times;
 
-      begin -- To_HHMMSS
-         if Decimal_Hour < 0.0 then
-            Decimal_Hour := Decimal_Hour + C_R (Full_Day);
-         end if; -- Decimal_Hour < 0.0
-         if Decimal_Hour = C_R (Full_Day) then
-            Decimal_Hour := 0.0;
-         end if; -- = C_R (Full_Day)
+   begin -- To_HHMMSS
+      if Decimal_Hour < 0.0 then
+         Decimal_Hour := Decimal_Hour + C_R (Full_Day);
+      end if; -- Decimal_Hour < 0.0
+      if Decimal_Hour = C_R (Full_Day) then
+         Decimal_Hour := 0.0;
+      end if; -- Decimal_Hour = C_R (Full_Day)
+      Check := D_H (Decimal_Hour);
       Result.Hour := Hour_Number (C_R'Truncation (Decimal_Hour));
       Decimal_Hour := (Decimal_Hour - C_R (Result.Hour)) * C_R (Sixty);
       Result.Minute := Minute_Number (C_R'Truncation (Decimal_Hour));
       Decimal_Hour := (Decimal_Hour - C_R (Result.Minute)) * C_R (Sixty);
-      Result.Second := Minute_Number (C_R'Truncation (Decimal_Hour));
+      Result.Second := Second_Number (C_R'Truncation (Decimal_Hour));
+      if Check - To_Hours (Result) > Half_Second then
+         if Result.Second < Second_Number'Last then
+            Result.Second := Result.Second + 1;
+         else
+            Result.Second := 0;
+            if Result.Minute < Minute_Number'Last then
+               Result.Minute := Result.Minute + 1;
+            else
+               Result.Minute := 0;
+               if Result.Hour < Hour_Number'Last then
+                  Result.Hour := Result.Hour + 1;
+               else
+                  Result.Hour := 0;
+               end if; -- Result.Hour < Hour_Number'Last
+            end if; -- Result.Minute < Minute_Number'Last
+         end if; -- Result.Second < Second_Number'Last
+      end if; -- Check - To_Hours (Result) > Half_Second
       return Result;
    end To_HHMMSS;
 

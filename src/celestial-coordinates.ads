@@ -4,7 +4,7 @@
 -- Created   : 25/03/2020
 -- Last Edit : 17/02/2023
 
--- 20230217 : Obliquity of the Ecliptic added.
+-- 20230217 : To_Altitude, To_Azimuth and Obliquity_Ecliptic added.
 -- 20230206 : functions releted to Hour Angle and Right Ascension added.
 -- 20230204 : To_Degrees and To_Radians transferred to Celestial;
 
@@ -64,6 +64,19 @@ package Celestial.Coordinates is
    function To_Hour_Angle (Altitude : in Altitudes;
                            Azimuth : in Azimuths;
                            Latitude : in Latitudes) return Right_Ascensions;
+
+   -- Convert from Equatorial to Horizon given Declination, Hour Angle and
+   -- Latitude, calculate Altitude and Azimuth.
+
+   function To_Altitude (Declination : in Declinations;
+                         Hour_Angle : in Right_Ascensions;
+                         Latitude : in Latitudes) return Altitudes;
+
+   function To_Azimuth (Declination : in Declinations;
+                        Hour_Angle : in Right_Ascensions;
+                        Latitude : in Latitudes) return Azimuths;
+
+   -- Required for conversions to and from Ecliptic coordinates.
 
    function Obliquity_Ecliptic (Date : in Dates) return Degrees;
    -- Obliquity of the Ecliptic Uses JPL equation,
