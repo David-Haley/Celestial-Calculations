@@ -2,8 +2,13 @@
 -- systems. Algorithms are based on Celestial Calculations by J L Lawrence.
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 18/02/2023
+-- Last Edit : 27/02/2023
 
+-- 20230227 : Signs incorrect in the equations 4.8.5 and 4.8.6, could not find
+-- an error in the functions but could not get book result. Wikipedia to the
+-- rescue! To_Hour_Angle and To_Right_Ascension corrected to allow for cases
+-- where subtraction results in a negative result.
+-- 20230226 : Concersions between Ecliptic and Equatorial coordinates added;
 -- 20230218 : To_Altitude and To_Azimuth added. Correction to To_DDDMMSS to
 -- round up to the nearest second.
 -- 20230217 : Obliquity of the Ecliptic added.
@@ -199,12 +204,30 @@ package body Celestial.Coordinates is
    function To_Right_Ascension (LST : in Decimal_Hours;
                                 Hour_Angle : in Right_Ascensions)
                                 return Right_Ascensions is
-     (Right_Ascensions (C_R (LST) - C_R (Hour_Angle)));
 
-   function Hour_Angle (LST : in Decimal_Hours;
-                        Right_Ascension : in Right_Ascensions)
-                        return Right_Ascensions is
-     (Time_Offsets (C_R (LST) - C_R (Right_Ascension)));
+      Result : Celestial_Real;
+
+   begin -- To_Right_Ascension
+      Result := C_R (LST) - C_R (Hour_Angle);
+      if Result < 0.0 then
+         Result := Result + C_R (Full_Day);
+      end if; -- Result < 0.0
+      return Right_Ascensions (Result);
+   end To_Right_Ascension;
+
+   function To_Hour_Angle (LST : in Decimal_Hours;
+                           Right_Ascension : in Right_Ascensions)
+                           return Right_Ascensions is
+
+      Result : Celestial_Real;
+
+   begin -- To_Hour_Angle
+      Result := C_R (LST) - C_R (Right_Ascension);
+      if Result < 0.0 then
+         Result := Result + C_R (Full_Day);
+      end if; -- Result < 0.0
+      return Right_Ascensions (Result);
+   end To_Hour_Angle;
 
    -- Conversion from Horizon to Equatorial given Altitude, Azimuth and Latitude
    -- calculate Declination and Hour Angle.
@@ -295,5 +318,127 @@ package body Celestial.Coordinates is
       -- T is Julian centuries since 12:00:00 on 01/01/2000
       return Degrees (E0 + E1 * T + E2 * T ** 2 + E3 * T ** 3);
    end Obliquity_Ecliptic;
+
+   -- Convert from Ecliptic to Equatorial given Ecliptic Latitude,
+   -- Ecliptic Longitude and Date, the latter is required to calculate the
+   -- Obliquity Ecliptic.
+
+   function To_Declination (Ecliptic_Latitude : in Ecliptic_Latitudes;
+                            Ecliptic_Longitude : in Ecliptic_Longitudes;
+                            Date : in Dates) return Declinations is
+
+      E : constant Degrees := Obliquity_Ecliptic (Date);
+      Declination : Declinations;
+
+   begin -- To_Declination
+      Declination := Arcsin (Sin (Ecliptic_Latitude) * Cos (E) +
+                               Cos (Ecliptic_Latitude) * Sin (E) *
+                               Sin (Ecliptic_Longitude));
+      return Declination;
+   end To_Declination;
+
+   function To_Right_Ascension (Ecliptic_Latitude : in Ecliptic_Latitudes;
+                                Ecliptic_Longitude : in Ecliptic_Longitudes;
+                                Date : in Dates) return Right_Ascensions is
+
+      E : constant Degrees := Obliquity_Ecliptic (Date);
+      X, Y : Celestial_Real;
+      A : Degrees;
+
+   begin -- To_Right_Ascension
+      Y := Sin (Ecliptic_Longitude) * Cos (E) -
+        Tan (Ecliptic_Latitude) * Sin (E);
+      X := Cos (Ecliptic_Longitude);
+      if X >= 0.0 then
+         if Y >= 0.0 then
+            A := Arctan (Y / X);
+         else
+            A := Arctan (Y / X) + 180.0;
+         end if; -- Y >= 0.0
+      else
+         if Y >= 0.0 then
+            A := Arctan (Y / X) + 360.0;
+         else
+            A := Arctan (Y / X) + 180.0;
+         end if; -- Y >= 0.0
+      end if; -- X >= 0.0
+      return Right_Ascensions (C_R (A) * C_R (Full_Day) / C_R (Full_Circle));
+   end To_Right_Ascension;
+
+   -- Convert from Equatorial to Ecliptic given  Right Ascension, Declination
+   -- and Date, the latter is required to calculate the Obliquity Ecliptic.
+
+   function To_Ecliptic_Latitude (Declination : in Declinations;
+                                  Right_Ascension : in Right_Ascensions;
+                                  Date : in Dates) return Ecliptic_Latitudes is
+
+      E : constant Degrees := Obliquity_Ecliptic (Date);
+      A : constant Degrees := Degrees (C_R (Right_Ascension) /
+                                         C_R (Full_Day) * C_R (Full_Circle));
+      -- A is Degrees not Decimal_Hours
+      Ecliptic_Latitude : Degrees;
+
+   begin -- To_Ecliptic_Latitude
+      Ecliptic_Latitude := Arcsin (Sin (Declination) * Cos (E) -
+                                     Cos (Declination) * Sin (E) * Sin (A));
+      return Ecliptic_Latitude;
+   end To_Ecliptic_Latitude;
+
+   function To_Ecliptic_Longitude (Declination : in Declinations;
+                                   Right_Ascension : in Right_Ascensions;
+                                   Date : in Dates)
+                                   return Ecliptic_Longitudes is
+
+      E : constant Degrees := Obliquity_Ecliptic (Date);
+      A : constant Degrees := Degrees (C_R (Right_Ascension) /
+                                         C_R (Full_Day) * C_R (Full_Circle));
+      -- A is Degrees not Decimal_Hours
+      X, Y : Celestial_Real;
+      Ecliptic_Longitude : Degrees;
+
+   begin -- To_Ecliptic_Longitude
+      Y := Sin (A) * Cos (E) + Tan (Declination) * Sin (E);
+      X := Cos (A);
+      if X >= 0.0 then
+         if Y >= 0.0 then
+            Ecliptic_Longitude := Arctan (Y / X);
+         else
+            Ecliptic_Longitude := Arctan (Y / X) + 180.0;
+         end if; -- Y >= 0.0
+      else
+         if Y >= 0.0 then
+            Ecliptic_Longitude := Arctan (Y / X) + 360.0;
+         else
+            Ecliptic_Longitude := Arctan (Y / X) + 180.0;
+         end if; -- Y >= 0.0
+      end if; -- X >= 0.0
+      return Ecliptic_Longitude;
+   end To_Ecliptic_Longitude;
+
+   procedure Precession_Correction (Declination_Old : in Declinations;
+                                    Right_Ascension_Old : in Right_Ascensions;
+                                    Epoch_Old, Epoch_New : in Dates;
+                                    Declination_New : out Declinations;
+                                    Right_Ascension_New : out Right_Ascensions)
+   is
+
+      A : constant Degrees := Degrees (C_R (Right_Ascension_Old) /
+                                         C_R (Full_Day) * C_R (Full_Circle));
+      D, M, Nd, Nt, T : Celestial_Real;
+
+   begin -- Precession_Correction;
+      D := C_R (Julian_Day (Epoch_New, (0, 0, 0)) -
+                  Julian_Day ((Epoch_Old), (0, 0, 0))) / 365.25;
+      -- Difference in years
+      T := (C_R (Epoch_New.Year) - 1900.0) / 100.0; -- Centuries since 1900
+      M := (3.072434 + 0.00186 * T) / C_R (Sixty * Sixty);
+      -- seconds converted to Hours
+      Nd := (20.0468 - 0.0085 * T) / C_R (Sixty * Sixty);
+      -- Arc seconds converted degrees
+      Nt := Nd / 15.0;
+      Declination_New := Declination_Old + Declinations (Nd * Cos (A) * D);
+      Right_Ascension_New := Right_Ascension_Old +
+        Right_Ascensions ((M + Nt * (Sin (A) * Tan (Declination_Old))) * D);
+   end Precession_Correction;
 
 end Celestial.Coordinates;

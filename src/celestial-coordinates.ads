@@ -2,8 +2,10 @@
 -- systems. Algorithms are based on Celestial Calculations by J L Lawrence.
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 17/02/2023
+-- Last Edit : 27/02/2023
 
+-- 20230227 : Precession_Correction added, Hour_Angle changed to To_Hour_Angle.
+-- 20230226 : Concersions between Ecliptic and Equatorial coordinates added;
 -- 20230217 : To_Altitude, To_Azimuth and Obliquity_Ecliptic added.
 -- 20230206 : functions releted to Hour Angle and Right Ascension added.
 -- 20230204 : To_Degrees and To_Radians transferred to Celestial;
@@ -50,7 +52,7 @@ package Celestial.Coordinates is
                                 Hour_Angle : in Right_Ascensions)
                                 return Right_Ascensions;
 
-   function Hour_Angle (LST : in Decimal_Hours;
+   function To_Hour_Angle (LST : in Decimal_Hours;
                         Right_Ascension : in Right_Ascensions)
                         return Right_Ascensions;
 
@@ -79,7 +81,35 @@ package Celestial.Coordinates is
    -- Required for conversions to and from Ecliptic coordinates.
 
    function Obliquity_Ecliptic (Date : in Dates) return Degrees;
-   -- Obliquity of the Ecliptic Uses JPL equation,
-   -- valid for dates after 1 January 2000.
+   -- Obliquity of the Ecliptic Uses JPL equation.
+
+   -- Convert from Ecliptic to Equatorial given Ecliptic Latitude,
+   -- Ecliptic Longitude and Date, the latter is required to calculate the
+   -- Obliquity Ecliptic.
+
+   function To_Declination (Ecliptic_Latitude : in Ecliptic_Latitudes;
+                            Ecliptic_Longitude : in Ecliptic_Longitudes;
+                            Date : in Dates) return Declinations;
+
+   function To_Right_Ascension (Ecliptic_Latitude : in Ecliptic_Latitudes;
+                                Ecliptic_Longitude : in Ecliptic_Longitudes;
+                                Date : in Dates) return Right_Ascensions;
+
+   -- Convert from Equatorial to Ecliptic given Right Ascension, Declination and
+   -- Date, the latter is required to calculate the Obliquity Ecliptic.
+
+   function To_Ecliptic_Latitude (Declination : in Declinations;
+                                  Right_Ascension : in Right_Ascensions;
+                                  Date : in Dates) return Ecliptic_Latitudes;
+
+   function To_Ecliptic_Longitude (Declination : in Declinations;
+                                   Right_Ascension : in Right_Ascensions;
+                                   Date : in Dates) return Ecliptic_Longitudes;
+
+   procedure Precession_Correction (Declination_Old : in Declinations;
+                                    Right_Ascension_Old : in Right_Ascensions;
+                                    Epoch_Old, Epoch_New : in Dates;
+                                    Declination_New : out Declinations;
+                                    Right_Ascension_New : out Right_Ascensions);
 
 end Celestial.Coordinates;

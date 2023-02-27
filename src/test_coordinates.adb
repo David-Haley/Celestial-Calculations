@@ -1,8 +1,11 @@
 -- Test program for Celestial.Coordinates
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 17/02/2023
+-- Last Edit : 27/02/2023
 
+-- 20230227 : Tests for Precession_Correction and end of chapter exercises
+-- added.
+-- 20230225 : Tests for conversions between Equatorial and Ecliptic corrdinates.
 -- 20230218 : To_Altitude and To_Azimuth added.
 -- 20230217 : Obliquity of the Ecliptic added.
 -- 20230206 : test Degrees to DDMMSS
@@ -181,14 +184,142 @@ procedure Test_Coordinates is
       Date : Dates;
 
    begin -- Obliquity_Ecliptic
-      Put ("Year: ");
-      Year_IO.Get (Date.Year);
-      Put ("Month: ");
-      Month_IO.Get (Date.Month);
-      Put ("Day: ");
+      Put ("Date in DD MM YYYY format: ");
       Day_IO.Get (Date.Day);
+      Month_IO.Get (Date.Month);
+      Year_IO.Get (Date.Year);
       Put_Line ("Obliquity of the Ecliptic:" & Obliquity_Ecliptic (Date)'Img);
    end Obliquity_Ecliptic;
+
+   procedure To_Equatorial_ELaELoD is
+
+      Ecliptic_Latitude : Ecliptic_Latitudes;
+      Ecliptic_Longitude : Ecliptic_Longitudes;
+      Date : Dates;
+      Declination : Declinations;
+      Right_Ascension : Right_Ascensions;
+
+   begin -- To_Equatorial_ELaELoD
+      Put ("Ecliptic Latitude: ");
+      Degree_IO.Get (Ecliptic_Latitude);
+      Put ("Ecliptic Longitude: ");
+      Degree_IO.Get (Ecliptic_Longitude);
+      Put ("Date in DD MM YYYY format: ");
+      Day_IO.Get (Date.Day);
+      Month_IO.Get (Date.Month);
+      Year_IO.Get (Date.Year);
+      Declination := To_Declination (Ecliptic_Latitude, Ecliptic_Longitude,
+                                     Date);
+      Right_Ascension := To_Right_Ascension (Ecliptic_Latitude,
+                                             Ecliptic_Longitude, Date);
+      Put_Line ("Declination:" & Declination'Img & " Right Ascension:" &
+                  Right_Ascension'Img & " E:" &
+               Obliquity_Ecliptic (Date)'Img);
+      Ecliptic_Latitude := To_Ecliptic_Latitude (Declination, Right_Ascension,
+                                                 Date);
+      Ecliptic_Longitude := To_Ecliptic_Longitude (Declination, Right_Ascension,
+                                                   Date);
+      Put_Line ("Converted back Ecliptic Latitude:" & Ecliptic_Latitude'Img &
+                  " Ecliptic Longitude:" & Ecliptic_Longitude'Img);
+   end To_Equatorial_ELaELoD;
+
+   procedure To_Ecliptic is
+
+      Declination : Declinations;
+      Right_Ascension : Right_Ascensions;
+      R_A : Times;
+      Date : Dates;
+      Ecliptic_Latitude : Ecliptic_Latitudes;
+      Ecliptic_Longitude : Ecliptic_Longitudes;
+
+   begin -- To_Ecliptic
+      Put ("Declination: ");
+      Degree_IO.Get (Declination);
+      Put ("Right Ascension in HH MM SS format: ");
+      Hour_IO.Get (R_A.Hour);
+      Minute_IO.Get (R_A.Minute);
+      Second_IO.Get (R_A.Second);
+      Right_Ascension := To_Hours (R_A);
+      Put ("Date in DD MM YYYY format: ");
+      Day_IO.Get (Date.Day);
+      Month_IO.Get (Date.Month);
+      Year_IO.Get (Date.Year);
+      Ecliptic_Latitude := To_Ecliptic_Latitude (Declination, Right_Ascension,
+                                                 Date);
+      Ecliptic_Longitude := To_Ecliptic_Longitude (Declination, Right_Ascension,
+                                                   Date);
+      Put_Line ("Ecliptic Latitude:" & Ecliptic_Latitude'Img &
+                  "Ecliptic Longitude:" & Ecliptic_Longitude'Img & " E:" &
+                  Obliquity_Ecliptic (Date)'Img);
+      Declination := To_Declination (Ecliptic_Latitude, Ecliptic_Longitude,
+                                     Date);
+      Right_Ascension := To_Right_Ascension (Ecliptic_Latitude,
+                                             Ecliptic_Longitude, Date);
+      Put_Line ("Converted back Declination:" & Declination'Img &
+                  " Right Ascension:" & Right_Ascension'Img);
+   end To_Ecliptic;
+
+   procedure Precession is
+
+      Declination_Old, Declination_New : Declinations;
+      Right_Ascension_Old, Right_Ascension_New : Right_Ascensions;
+      R_A : Times;
+      Epoch_Old, Epoch_New : Dates;
+
+
+   begin -- Precession
+      Put ("Declination: ");
+      Degree_IO.Get (Declination_Old);
+      Put ("Right Ascension in HH MM SS format: ");
+      Hour_IO.Get (R_A.Hour);
+      Minute_IO.Get (R_A.Minute);
+      Second_IO.Get (R_A.Second);
+      Right_Ascension_Old := To_Hours (R_A);
+      Put ("Old Epoch in DD MM YYYY format: ");
+      Day_IO.Get (Epoch_Old.Day);
+      Month_IO.Get (Epoch_Old.Month);
+      Year_IO.Get (Epoch_Old.Year);
+      Put ("New Epoch in DD MM YYYY format: ");
+      Day_IO.Get (Epoch_New.Day);
+      Month_IO.Get (Epoch_New.Month);
+      Year_IO.Get (Epoch_New.Year);
+      Precession_Correction (Declination_Old, Right_Ascension_Old,
+                             Epoch_Old, Epoch_New,
+                             Declination_New, Right_Ascension_New);
+      Put_Line ("new epoch Declination:" & Declination_New'Img &
+                  " Right Ascension:" & Right_Ascension_New'Img);
+
+   end Precession;
+
+   procedure Chapter_4_Exercises is
+
+      function Time_String (Time : in Times) return String is
+         (Time.Hour'Img & ":" & Time.Minute'Img & ":" & Time.Second'Img);
+
+      Galatic : constant String := "Galactic Coordinates not implemented";
+      A_H, R_A : Right_Ascensions;
+      Date : Dates;
+      Long : Longitudes;
+      LST, GST : Decimal_Hours;
+
+   begin -- Chapter_4_Exercises
+      Long := (West, 64.0);
+      Date := (1976, 6, 5);
+      A_H := To_Hours ((15, 30, 15));
+      GST := UTC_To_GST (Date, (14, 0, 0));
+      LST := GST;
+      To_Local (To_Time_Offset (Long), Date, LST);
+      R_A := To_Right_Ascension (LST, A_H);
+      Put_Line ("(1) " & Time_String (To_HHMMSS (R_A)));
+      Long := (East, 40.0);
+      Date := (2015, 1, 5);
+      R_A := To_Hours ((12, 32, 06));
+      GST := UTC_To_GST (Date, (12, 0, 0));
+      LST := GST;
+      To_Local (To_Time_Offset (Long), Date, LST);
+      A_H := To_Hour_Angle (LST, R_A);
+      Put_Line ("(2) " & Time_String (To_HHMMSS (A_H)));
+   end Chapter_4_Exercises;
 
    Test : Character;
 
@@ -204,6 +335,11 @@ begin --  Test_Coordinates
       Put_Line ("H To Equatorial (Altitude, Azimuth, Latitude)");
       Put_Line ("I To Horizon (Declination, Hour Angle, Latitude)");
       Put_Line ("J Obliquity of the Ecliptic (Date)");
+      Put_Line
+        ("K To Equatorial (Ecliptic Latitude, Ecliptic Longitude, Date)");
+      Put_Line ("L To Ecliptic (Declination, Right Ascension, Date)");
+      Put_line ("M Precession Correction");
+      Put_Line ("Z Answers to chapter 4 exercises");
       Put_Line ("0 Exit tests");
       Put ("Test: ");
       Get (Test);
@@ -229,6 +365,14 @@ begin --  Test_Coordinates
             To_Horizon;
          when 'J' =>
             Obliquity_Ecliptic;
+         when 'K' =>
+            To_Equatorial_ELaELoD;
+         when 'L' =>
+            To_Ecliptic;
+         when 'M' =>
+            Precession;
+         when 'Z' =>
+            Chapter_4_Exercises;
          when others =>
             Put_Line ("Unknown test: '" & Test & "'");
       end case; -- Test
