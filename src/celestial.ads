@@ -6,8 +6,9 @@
 
 -- Author    : David Haley
 -- Created   : 24/11/2019
--- Last Edit : 21/02/2023
+-- Last Edit : 28/02/2023
 
+-- 20230228 : Coordinate components made types not subtypes;
 -- 20230221 : Ecliptic Coordinates added.
 -- 20230206 : type DDDMMSSs added.
 -- 20230203 : Pi and Other functions section added.
@@ -69,19 +70,19 @@ package Celestial is
    end record; -- Longitudes
 
    -- Equatorial Coordinates
-   subtype Declinations is Degrees range
+   type Declinations is new Degrees range
      -Degrees (Full_Circle / 4) .. Degrees (Full_Circle / 4);
-   subtype Right_Ascensions is Decimal_Hours range 0.0 .. Decimal_Hours'Last;
+   type Right_Ascensions is new Decimal_Hours range 0.0 .. Decimal_Hours'Last;
 
    -- Horizon Coordinates
-   subtype Azimuths is Degrees range 0.0 .. Degrees (Full_Circle);
-   subtype Altitudes is Degrees range
+   type Azimuths is new Degrees range 0.0 .. Degrees (Full_Circle);
+   type Altitudes is new Degrees range
      -Degrees (Full_Circle / 4) .. Degrees (Full_Circle / 4);
 
    -- Ecliptic Coordinates
-   subtype Ecliptic_Latitudes is Degrees range
+   type Ecliptic_Latitudes is new Degrees range
      -Degrees (Full_Circle / 4) .. Degrees (Full_Circle / 4);
-   subtype Ecliptic_Longitudes is Degrees range 0.0 .. Degrees (Full_Circle);
+   type Ecliptic_Longitudes is new Degrees range 0.0 .. Degrees (Full_Circle);
 
    -- Trig Functions overloaded for Degrees not Radians
 

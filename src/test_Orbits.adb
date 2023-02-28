@@ -1,14 +1,16 @@
 -- Test program for Celestial.Orbits
 -- Author    : David Haley
 -- Created   : 02/02/2023
--- Last Edit : 04/02/2023
+-- Last Edit : 28/02/2023
 
---20230204 : Spelling correction Anomly to Anomaly
+-- 20230228 : Chapter 4 exercises 13 .. 15
+-- 20230204 : Spelling correction Anomly to Anomaly
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Handling; use Ada.Characters.Handling;
 with Celestial; use Celestial;
 with Celestial.Orbits; use Celestial.Orbits;
+with Celestial.Coordinates; use Celestial.Coordinates;
 
 procedure Test_Orbits is
 
@@ -117,6 +119,46 @@ procedure Test_Orbits is
                   True_Anomaly (Eccentricity, Mean_Anomaly)'Img);
    end True_Anomaly_Radians;
 
+   procedure Chapter_4_Exercises is
+
+      function Angle_String (Degree_In : in Degrees) return String is
+
+         Degree : Degrees := Degree_In;
+         D : DDDMMSSs;
+
+      begin -- Angle_String
+         if Degree < 0.0 then
+            Degree := abs (Degree);
+            D := To_DDDMMSS (Degree);
+            return " -" & D.Degree'Img & D.Minute'Img & D.Second'Img;
+         else
+            D := To_DDDMMSS (Degree);
+            return D.Degree'Img & D.Minute'Img & D.Second'Img;
+         end if; -- Degree < 0.0
+      end Angle_String;
+
+      E : Eccentricities;
+      M_A : Degrees;
+      Ec_A : Radians;
+
+   begin -- Chapter_4_Exercises
+      E := 0.00035;
+      M_A := 5.498078;
+      Ec_A := Eccentric_Anomaly (E, To_Radians (M_A));
+      Put_Line ("(13) Eccentric Anomaly:" & To_Degrees (Ec_A)'Img & " or" &
+                  Angle_String (To_Degrees (Ec_A)));
+      E := 0.6813025;
+      M_A := 5.498078;
+      Ec_A := Eccentric_Anomaly (E, To_Radians (M_A));
+      Put_Line ("(14) Eccentric Anomaly:" & To_Degrees (Ec_A)'Img & " or" &
+                  Angle_String (To_Degrees (Ec_A)));
+      E := 0.85;
+      M_A := 5.498078;
+      Ec_A := Eccentric_Anomaly (E, To_Radians (M_A));
+      Put_Line ("(15) Eccentric Anomaly:" & To_Degrees (Ec_A)'Img & " or" &
+                  Angle_String (To_Degrees (Ec_A)));
+   end Chapter_4_Exercises;
+
    Test : Character;
 
 begin -- Test_Orbits
@@ -128,6 +170,7 @@ begin -- Test_Orbits
       Put_Line ("E Orbit_Time (Radians)");
       Put_Line ("F True Anomaly (Degrees)");
       Put_Line ("G True Anomaly (Radians)");
+      Put_Line ("Z Answers to chapter 4 exercises");
       Put_Line ("0 Exit");
       Put ("Test: ");
       Get (Test);
@@ -147,6 +190,8 @@ begin -- Test_Orbits
             True_Anomaly_Degrees;
          when 'G' =>
             True_Anomaly_Radians;
+         when 'Z' =>
+            Chapter_4_Exercises;
          when others =>
             Put_Line ("Unknown test: '" & Test & "'");
       end case; -- To_Upper (Test)

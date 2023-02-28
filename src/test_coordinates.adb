@@ -1,8 +1,9 @@
 -- Test program for Celestial.Coordinates
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 27/02/2023
+-- Last Edit : 28/02/2023
 
+-- 20230228 : Coordinate components made types not subtypes;
 -- 20230227 : Tests for Precession_Correction and end of chapter exercises
 -- added.
 -- 20230225 : Tests for conversions between Equatorial and Ecliptic corrdinates.
@@ -23,20 +24,27 @@ with Celestial.Coordinates; use Celestial.Coordinates;
 
 procedure Test_Coordinates is
 
-   package Year_IO is new Ada.Text_IO.Integer_IO (Year_Number);
-   package Month_IO is new Ada.Text_IO.Integer_IO (Month_Number);
+   package Altitude_IO is new Ada.Text_IO.Float_IO (Altitudes);
+   package Azimuth_IO is new Ada.Text_IO.Float_IO (Azimuths);
    package Day_IO is new Ada.Text_IO.Integer_IO (Day_Number);
-   package Hour_IO is new Ada.Text_IO.Integer_IO (Hour_Number);
-   package Minute_IO is new Ada.Text_IO.Integer_IO (Minute_Number);
-   package Second_IO is new Ada.Text_IO.Integer_IO (Second_Number);
-   package Radian_IO is new Ada.Text_IO.Float_IO (Radians);
-   package Time_Offset_IO is new Ada.Text_IO.Float_IO (Celestial.Time_Offsets);
-   package Degree_IO is new Ada.Text_IO.Float_IO (Degrees);
    package DDD_IO is new Ada.Text_IO.Integer_IO (Degrees_N);
-   package MM_IO is new Ada.Text_IO.Integer_IO (Minutes_N);
-   package SS_IO is new Ada.Text_IO.Integer_IO (Seconds_N);
+   package Declination_IO is new Ada.Text_IO.Float_IO (Declinations);
+   package Degree_IO is new Ada.Text_IO.Float_IO (Degrees);
+   package Ecliptic_Latitude_IO is new
+     Ada.Text_IO.Float_IO (Ecliptic_Latitudes);
+   package Ecliptic_Longitude_IO is new
+     Ada.Text_IO.Float_IO (Ecliptic_Longitudes);
+   package Hour_IO is new Ada.Text_IO.Integer_IO (Hour_Number);
    package Latitude_Direction_IO is new
      Ada.Text_IO.Enumeration_IO (Latitude_Directions);
+   package Minute_IO is new Ada.Text_IO.Integer_IO (Minute_Number);
+   package Month_IO is new Ada.Text_IO.Integer_IO (Month_Number);
+   package MM_IO is new Ada.Text_IO.Integer_IO (Minutes_N);
+   package Radian_IO is new Ada.Text_IO.Float_IO (Radians);
+   package Second_IO is new Ada.Text_IO.Integer_IO (Second_Number);
+   package SS_IO is new Ada.Text_IO.Integer_IO (Seconds_N);
+   package Time_Offset_IO is new Ada.Text_IO.Float_IO (Celestial.Time_Offsets);
+   package Year_IO is new Ada.Text_IO.Integer_IO (Year_Number);
 
    procedure To_DDDMMSS is
 
@@ -141,9 +149,9 @@ procedure Test_Coordinates is
 
    begin -- To_Equatorial_AAL
       Put ("Altitude: ");
-      Degree_IO.Get (Altitude);
+      Altitude_IO.Get (Altitude);
       Put ("Azimuth: ");
-      Degree_IO.Get (Azimuth);
+      Azimuth_IO.Get (Azimuth);
       Put ("Latitude.Hemisphere: ");
       Latitude_Direction_IO.Get (Latitude.Hemisphere);
       Put ("Latitude.Angle: ");
@@ -163,12 +171,12 @@ procedure Test_Coordinates is
 
    begin -- To_Horizon
       Put ("Declination: ");
-      Degree_IO.Get (Declination);
+      Declination_IO.Get (Declination);
       Put ("Hour Angle in HH MM SS format: ");
       Hour_IO.Get (H_A.Hour);
       Minute_IO.Get (H_A.Minute);
       Second_IO.Get (H_A.Second);
-      Hour_Angle := To_Hours (H_A);
+      Hour_Angle := Right_Ascensions (To_Hours (H_A));
       Put ("Latitude.Hemisphere: ");
       Latitude_Direction_IO.Get (Latitude.Hemisphere);
       Put ("Latitude.Angle: ");
@@ -201,9 +209,9 @@ procedure Test_Coordinates is
 
    begin -- To_Equatorial_ELaELoD
       Put ("Ecliptic Latitude: ");
-      Degree_IO.Get (Ecliptic_Latitude);
+      Ecliptic_Latitude_IO.Get (Ecliptic_Latitude);
       Put ("Ecliptic Longitude: ");
-      Degree_IO.Get (Ecliptic_Longitude);
+      Ecliptic_Longitude_IO.Get (Ecliptic_Longitude);
       Put ("Date in DD MM YYYY format: ");
       Day_IO.Get (Date.Day);
       Month_IO.Get (Date.Month);
@@ -234,12 +242,12 @@ procedure Test_Coordinates is
 
    begin -- To_Ecliptic
       Put ("Declination: ");
-      Degree_IO.Get (Declination);
+      Declination_IO.Get (Declination);
       Put ("Right Ascension in HH MM SS format: ");
       Hour_IO.Get (R_A.Hour);
       Minute_IO.Get (R_A.Minute);
       Second_IO.Get (R_A.Second);
-      Right_Ascension := To_Hours (R_A);
+      Right_Ascension := Right_Ascensions (To_Hours (R_A));
       Put ("Date in DD MM YYYY format: ");
       Day_IO.Get (Date.Day);
       Month_IO.Get (Date.Month);
@@ -269,12 +277,12 @@ procedure Test_Coordinates is
 
    begin -- Precession
       Put ("Declination: ");
-      Degree_IO.Get (Declination_Old);
+      Declination_IO.Get (Declination_Old);
       Put ("Right Ascension in HH MM SS format: ");
       Hour_IO.Get (R_A.Hour);
       Minute_IO.Get (R_A.Minute);
       Second_IO.Get (R_A.Second);
-      Right_Ascension_Old := To_Hours (R_A);
+      Right_Ascension_Old :=  Right_Ascensions (To_Hours (R_A));
       Put ("Old Epoch in DD MM YYYY format: ");
       Day_IO.Get (Epoch_Old.Day);
       Month_IO.Get (Epoch_Old.Month);
@@ -293,32 +301,93 @@ procedure Test_Coordinates is
 
    procedure Chapter_4_Exercises is
 
-      function Time_String (Time : in Times) return String is
-         (Time.Hour'Img & ":" & Time.Minute'Img & ":" & Time.Second'Img);
+      function Time_String (Time : in Decimal_Hours) return String is
+         T : constant Times := To_HHMMSS (Time);
 
-      Galatic : constant String := "Galactic Coordinates not implemented";
+      begin -- Time_String
+         return T.Hour'Img & ":" & T.Minute'Img & ":" & T.Second'Img;
+      end Time_String;
+
+      function Angle_String (Degree_In : in Degrees) return String is
+
+         Degree : Degrees := Degree_In;
+         D : DDDMMSSs;
+
+      begin -- Angle_String
+         if Degree < 0.0 then
+            Degree := abs (Degree);
+            D := To_DDDMMSS (Degree);
+            return " -" & D.Degree'Img & D.Minute'Img & D.Second'Img;
+         else
+            D := To_DDDMMSS (Degree);
+            return D.Degree'Img & D.Minute'Img & D.Second'Img;
+         end if; -- Degree < 0.0
+      end Angle_String;
+
+      Altitude : Altitudes;
+      Azimuth : Azimuths;
+      Dec : Declinations;
       A_H, R_A : Right_Ascensions;
       Date : Dates;
+      Lat : Latitudes;
       Long : Longitudes;
       LST, GST : Decimal_Hours;
+      Ec_Lat : Ecliptic_Latitudes;
+      Ec_Long : Ecliptic_Longitudes;
 
    begin -- Chapter_4_Exercises
       Long := (West, 64.0);
       Date := (1976, 6, 5);
-      A_H := To_Hours ((15, 30, 15));
+      A_H := Right_Ascensions(To_Hours ((15, 30, 15)));
       GST := UTC_To_GST (Date, (14, 0, 0));
       LST := GST;
       To_Local (To_Time_Offset (Long), Date, LST);
       R_A := To_Right_Ascension (LST, A_H);
-      Put_Line ("(1) " & Time_String (To_HHMMSS (R_A)));
+      Put_Line ("(1) Right Ascension:" & Time_String (Decimal_Hours (R_A)));
       Long := (East, 40.0);
       Date := (2015, 1, 5);
-      R_A := To_Hours ((12, 32, 06));
+      R_A := Right_Ascensions (To_Hours ((12, 32, 06)));
       GST := UTC_To_GST (Date, (12, 0, 0));
       LST := GST;
       To_Local (To_Time_Offset (Long), Date, LST);
       A_H := To_Hour_Angle (LST, R_A);
-      Put_Line ("(2) " & Time_String (To_HHMMSS (A_H)));
+      Put_Line ("(2) Hour Angle:" & Time_String (Decimal_Hours (A_H)));
+      Altitude := Altitudes (To_Degrees ((10, 0, 0)));
+      Azimuth := Azimuths (To_Degrees ((200, 10, 20)));
+      Lat := (North, 35.6);
+      Dec := To_Declination (Altitude, Azimuth, Lat);
+      A_H := To_Hour_Angle (Altitude, Azimuth, Lat);
+      Put_Line ("(3) Hour Angle:" & Time_String (Decimal_Hours (A_H)) &
+                  " Declination:" & Angle_String (Degrees (Dec)));
+      A_H := Right_Ascensions(To_Hours ((7, 0, 0)));
+      Dec := Declinations (To_Degrees ((49, 54, 20)));
+      Lat := (South, 80.0);
+      Altitude := To_Altitude (Dec, A_H, Lat);
+      Azimuth := To_Azimuth (Dec, A_H, Lat);
+      Put_Line ("(4) Altitude:" & Angle_String (Degrees (Altitude)) &
+                  " Azimuth:" & Angle_String (Degrees (Azimuth)));
+      Ec_Lat := 0.0;
+      Ec_Long := Ecliptic_Longitudes (To_Degrees ((120, 30, 30)));
+      Date := (2000, 1, 1);
+      Dec := To_Declination (Ec_Lat, Ec_Long, Date);
+      R_A := To_Right_Ascension (Ec_Lat, Ec_Long, Date);
+      Put_Line ("(5) Right Ascension:" & Time_String (Decimal_Hours (R_A)) &
+                  " Declination:" & Angle_String (Degrees (Dec)));
+      R_A := Right_Ascensions (To_Hours ((11, 10, 13)));
+      Dec := Declinations (To_Degrees ((30, 5, 40)));
+      Date := (2000, 1, 1);
+      Ec_Lat := To_Ecliptic_Latitude (Dec, R_A, Date);
+      Ec_Long := To_Ecliptic_Longitude (Dec, R_A, Date);
+      Put_Line ("(6) Ecliptic Latitude:" & Angle_String (Degrees (Ec_Lat)) &
+                  " Ecliptic Longitude:" & Angle_String (Degrees (Ec_Long)));
+      Put_Line
+        ("Exercise 7 to 11 not solved, Galactic Coordinates not implemented");
+      R_A := Right_Ascensions (To_Hours ((12, 34, 34)));
+      Dec := Declinations (To_Degrees ((20, 49, 8)));
+      Precession_Correction (Dec, R_A, (2000, 1, 1), (2015, 1, 1), Dec, R_A);
+      Put_Line ("(12) Right Ascension:" & Time_String (Decimal_Hours (R_A)) &
+                  " Declination:" & Angle_String (Degrees (Dec)));
+      Put_Line ("For exercise 13 to 15 use Test_Orbit test 'Z'");
    end Chapter_4_Exercises;
 
    Test : Character;

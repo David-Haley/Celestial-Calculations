@@ -3,7 +3,9 @@
 
 -- Author    : David Haley
 -- Created   : 02/02/2023
--- Last Edit : 02/02/2023
+-- Last Edit : 28/02/2023
+
+-- 20230228 : Eccentric_Anomaly made available.
 
 with Celestial; use Celestial;
 
@@ -29,6 +31,11 @@ package Celestial.Orbits is
    Function Orbit_Time (Period : in Celestial_Real;
                         Mean_Anomaly : Radians) return Celestial_Real;
    -- Period and result are the same units, s, hours, days or years etc.
+
+   function Eccentric_Anomaly (Eccentricity : in Eccentricities;
+                               Mean_Anomaly : in Radians) return Radians;
+   -- Solution based on Newton Rapson solution to Kepler's equation.
+
 
    function True_Anomaly (Eccentricity : in Eccentricities;
                           Mean_Anomaly : in Degrees) return Degrees;

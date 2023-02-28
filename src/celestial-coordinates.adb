@@ -2,13 +2,14 @@
 -- systems. Algorithms are based on Celestial Calculations by J L Lawrence.
 -- Author    : David Haley
 -- Created   : 25/03/2020
--- Last Edit : 27/02/2023
+-- Last Edit : 28/02/2023
 
+-- 20230228 : Coordinate components made types not subtypes;
 -- 20230227 : Signs incorrect in the equations 4.8.5 and 4.8.6, could not find
 -- an error in the functions but could not get book result. Wikipedia to the
 -- rescue! To_Hour_Angle and To_Right_Ascension corrected to allow for cases
 -- where subtraction results in a negative result.
--- 20230226 : Concersions between Ecliptic and Equatorial coordinates added;
+-- 20230226 : Conversions between Ecliptic and Equatorial coordinates added;
 -- 20230218 : To_Altitude and To_Azimuth added. Correction to To_DDDMMSS to
 -- round up to the nearest second.
 -- 20230217 : Obliquity of the Ecliptic added.
@@ -237,10 +238,13 @@ package body Celestial.Coordinates is
                             Latitude : in Latitudes) return Declinations is
 
       Lat : constant Degrees := To_Angle (Latitude);
+      Alt : constant Degrees := Degrees (Altitude);
+      Azi : constant Degrees := Degrees (Azimuth);
+      Dec : Degrees;
 
    begin -- To_Declination
-      return Arcsin ( Sin (Altitude) * Sin (Lat) +
-                        Cos (Altitude) * Cos (Lat) * Cos (Azimuth));
+      Dec := Arcsin (Sin (Alt) * Sin (Lat) + Cos (Alt) * Cos (Lat) * Cos (Azi));
+      return Declinations (Dec);
    end To_Declination;
 
    function To_Hour_Angle (Altitude : in Altitudes;
@@ -248,16 +252,18 @@ package body Celestial.Coordinates is
                            Latitude : in Latitudes) return Right_Ascensions is
 
       Lat : constant Degrees := To_Angle (Latitude);
-      Dec : constant Declinations := To_Declination (Altitude, Azimuth,
-                                                     Latitude);
+      Dec : constant Degrees :=
+        Degrees (To_Declination (Altitude, Azimuth, Latitude));
+      Alt : constant Degrees := Degrees (Altitude);
+      Azi : constant Degrees := Degrees (Azimuth);
       H_A_Degrees : Degrees;
 
    begin -- To_Hour_Angle
-      H_A_Degrees := Arccos ((Sin (Altitude) - Sin (Lat) * Sin (Dec)) /
+      H_A_Degrees := Arccos ((Sin (Alt) - Sin (Lat) * Sin (Dec)) /
                              (Cos (Lat) * Cos (Dec)));
-      if Sin (Azimuth) >= 0.0 then
+      if Sin (Azi) >= 0.0 then
          H_A_Degrees := Degrees (Full_Circle) - H_A_Degrees;
-      end if; -- Sin (Azimuth) >= 0.0
+      end if; -- Sin (Azi) >= 0.0
       return Right_Ascensions (H_A_Degrees / Degrees (Full_Circle) *
                               Degrees (Full_Day));
    end To_Hour_Angle;
@@ -269,33 +275,39 @@ package body Celestial.Coordinates is
                          Hour_Angle : in Right_Ascensions;
                          Latitude : in Latitudes) return Altitudes is
 
-      Lat : constant Degrees := To_Angle (Latitude);
+      Dec : constant Degrees := Degrees (Declination);
       H_A : constant Degrees :=
         Degrees (C_R (Hour_Angle) / C_R (Full_Day) * C_R (Full_Circle));
+      Lat : constant Degrees := To_Angle (Latitude);
+      Alt : Degrees;
 
    begin -- To_Altitude
-      return Arcsin (Sin (Declination) * Sin (Lat) +
-                       Cos (Declination) * Cos (Lat) * Cos (H_A));
+      Alt := Arcsin (Sin (Dec) * Sin (Lat) + Cos (Dec) * Cos (Lat) * Cos (H_A));
+      return Altitudes (Alt);
    end To_Altitude;
 
    function To_Azimuth (Declination : in Declinations;
                         Hour_Angle : in Right_Ascensions;
                         Latitude : in Latitudes) return Azimuths is
 
-      Lat : constant Degrees := To_Angle (Latitude);
+      Dec : constant Degrees := Degrees (Declination);
       H_A : constant Degrees :=
         Degrees (C_R (Hour_Angle) / C_R (Full_Day) * C_R (Full_Circle));
-      Alt : constant Degrees := To_Altitude (Declination, Hour_Angle, Latitude);
+      Lat : constant Degrees := To_Angle (Latitude);
+      Alt : constant Degrees :=
+        Degrees (To_Altitude (Declination, Hour_Angle, Latitude));
+      Azi : Degrees;
 
    begin -- To_Azimuth
       if Sin (H_A) >= 0.0 then
-         return Degrees (Full_Circle) - Arccos ((Sin (Declination) -
-                                                  Sin (Lat) * Sin (Alt)) /
-                                                  (Cos (Lat) * Cos (Alt)));
+         Azi := Degrees (Full_Circle) -
+           Arccos ((Sin (Dec) - Sin (Lat) * Sin (Alt)) /
+                   (Cos (Lat) * Cos (Alt)));
       else
-         return Arccos ((Sin (Declination) - Sin (Lat) * Sin (Alt)) /
-                          (Cos (Lat) * Cos (Alt)));
+         Azi := Arccos ((Sin (Dec) - Sin (Lat) * Sin (Alt)) /
+                        (Cos (Lat) * Cos (Alt)));
       end if; -- Sin (H_A) >= 0.0
+      return Azimuths (Azi);
    end To_Azimuth;
 
    -- Required for conversions to and from Ecliptic coordinates.
@@ -327,41 +339,33 @@ package body Celestial.Coordinates is
                             Ecliptic_Longitude : in Ecliptic_Longitudes;
                             Date : in Dates) return Declinations is
 
+      Lat : constant Degrees := Degrees (Ecliptic_Latitude);
+      Long : constant Degrees := Degrees (Ecliptic_Longitude);
       E : constant Degrees := Obliquity_Ecliptic (Date);
-      Declination : Declinations;
+      Dec : Degrees;
 
    begin -- To_Declination
-      Declination := Arcsin (Sin (Ecliptic_Latitude) * Cos (E) +
-                               Cos (Ecliptic_Latitude) * Sin (E) *
-                               Sin (Ecliptic_Longitude));
-      return Declination;
+      Dec := Arcsin (Sin (Lat) * Cos (E) + Cos (Lat) * Sin (E) * Sin (Long));
+      return Declinations (Dec);
    end To_Declination;
 
    function To_Right_Ascension (Ecliptic_Latitude : in Ecliptic_Latitudes;
                                 Ecliptic_Longitude : in Ecliptic_Longitudes;
                                 Date : in Dates) return Right_Ascensions is
 
+      Lat : constant Degrees := Degrees (Ecliptic_Latitude);
+      Long : constant Degrees := Degrees (Ecliptic_Longitude);
       E : constant Degrees := Obliquity_Ecliptic (Date);
       X, Y : Celestial_Real;
       A : Degrees;
 
    begin -- To_Right_Ascension
-      Y := Sin (Ecliptic_Longitude) * Cos (E) -
-        Tan (Ecliptic_Latitude) * Sin (E);
-      X := Cos (Ecliptic_Longitude);
-      if X >= 0.0 then
-         if Y >= 0.0 then
-            A := Arctan (Y / X);
-         else
-            A := Arctan (Y / X) + 180.0;
-         end if; -- Y >= 0.0
-      else
-         if Y >= 0.0 then
-            A := Arctan (Y / X) + 360.0;
-         else
-            A := Arctan (Y / X) + 180.0;
-         end if; -- Y >= 0.0
-      end if; -- X >= 0.0
+      Y := Sin (Long) * Cos (E) - Tan (Lat) * Sin (E);
+      X := Cos (Long);
+      A := Arctan (Y, X);
+      if A < 0.0 then
+         A := A + Degrees (Full_Circle);
+      end if; -- A < 0.0
       return Right_Ascensions (C_R (A) * C_R (Full_Day) / C_R (Full_Circle));
    end To_Right_Ascension;
 
@@ -372,16 +376,16 @@ package body Celestial.Coordinates is
                                   Right_Ascension : in Right_Ascensions;
                                   Date : in Dates) return Ecliptic_Latitudes is
 
-      E : constant Degrees := Obliquity_Ecliptic (Date);
+      Dec : constant Degrees := Degrees (Declination);
       A : constant Degrees := Degrees (C_R (Right_Ascension) /
                                          C_R (Full_Day) * C_R (Full_Circle));
       -- A is Degrees not Decimal_Hours
-      Ecliptic_Latitude : Degrees;
+      E : constant Degrees := Obliquity_Ecliptic (Date);
+      Lat : Degrees;
 
    begin -- To_Ecliptic_Latitude
-      Ecliptic_Latitude := Arcsin (Sin (Declination) * Cos (E) -
-                                     Cos (Declination) * Sin (E) * Sin (A));
-      return Ecliptic_Latitude;
+      Lat := Arcsin (Sin (Dec) * Cos (E) - Cos (Dec) * Sin (E) * Sin (A));
+      return Ecliptic_Latitudes (Lat);
    end To_Ecliptic_Latitude;
 
    function To_Ecliptic_Longitude (Declination : in Declinations;
@@ -389,30 +393,22 @@ package body Celestial.Coordinates is
                                    Date : in Dates)
                                    return Ecliptic_Longitudes is
 
-      E : constant Degrees := Obliquity_Ecliptic (Date);
+      Dec : constant degrees := Degrees (Declination);
       A : constant Degrees := Degrees (C_R (Right_Ascension) /
                                          C_R (Full_Day) * C_R (Full_Circle));
       -- A is Degrees not Decimal_Hours
+      E : constant Degrees := Obliquity_Ecliptic (Date);
       X, Y : Celestial_Real;
-      Ecliptic_Longitude : Degrees;
+      Long : Degrees;
 
    begin -- To_Ecliptic_Longitude
-      Y := Sin (A) * Cos (E) + Tan (Declination) * Sin (E);
+      Y := Sin (A) * Cos (E) + Tan (Dec) * Sin (E);
       X := Cos (A);
-      if X >= 0.0 then
-         if Y >= 0.0 then
-            Ecliptic_Longitude := Arctan (Y / X);
-         else
-            Ecliptic_Longitude := Arctan (Y / X) + 180.0;
-         end if; -- Y >= 0.0
-      else
-         if Y >= 0.0 then
-            Ecliptic_Longitude := Arctan (Y / X) + 360.0;
-         else
-            Ecliptic_Longitude := Arctan (Y / X) + 180.0;
-         end if; -- Y >= 0.0
-      end if; -- X >= 0.0
-      return Ecliptic_Longitude;
+      Long := Arctan (Y, X);
+      if Long < 0.0 then
+        Long := Long + Degrees (Full_Circle);
+      end if; -- Long < 0.0
+      return Ecliptic_Longitudes (Long);
    end To_Ecliptic_Longitude;
 
    procedure Precession_Correction (Declination_Old : in Declinations;
@@ -438,7 +434,8 @@ package body Celestial.Coordinates is
       Nt := Nd / 15.0;
       Declination_New := Declination_Old + Declinations (Nd * Cos (A) * D);
       Right_Ascension_New := Right_Ascension_Old +
-        Right_Ascensions ((M + Nt * (Sin (A) * Tan (Declination_Old))) * D);
+        Right_Ascensions ((M + Nt * (Sin (A) *
+                              Tan (Degrees (Declination_Old)))) * D);
    end Precession_Correction;
 
 end Celestial.Coordinates;
